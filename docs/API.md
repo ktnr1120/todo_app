@@ -11,16 +11,21 @@ GET /tasks
 |------------|-----|------|--------------------------|
 | page       | int | 任意 | ページ番号（デフォルト:1） |
 | keyword    | string | 任意 | タスク検索キーワード     |
+| status     | string | 任意 | タスクステータスフィルタ（todo, doing, done） |
 
 ---
 
-### レスポンス（正常系）
+---
+
+## 正常系レスポンス例
+
+### 一覧取得（GET /tasks）
 
 ````json
 {
   "page": 1,
   "per_page": 10,
-  "total": 25,
+  "total": 2,
   "tasks": [
     {
       "id": 1,
@@ -35,56 +40,75 @@ GET /tasks
   ]
 }
 
+## 詳細取得（GET/tasks/id）
 {
-  "message": "Invalid query parameter"
+  "id": 1,
+  "title": "タスク1",
+  "status": "todo",
+  "created_at": "2026-04-10T10:00:00Z",
+  "updated_at": null
+}
+---
+
+## 作成（POST /tasks）
+{
+  "id": 3,
+  "title": "新しいタスク",
+  "status": "todo",
+  "created_at": "2026-04-10T12:00:00Z",
+  "updated_at": null
 }
 
-
----
-
-# ✔ 更新API（エラー設計込み）
-
-
-```md id="3m4l2v"
----
-
-## タスク更新
-
-### エンドポイント
-PUT /tasks/:id
-
----
-
-### リクエスト
-
-```json
-{
-  "title": "更新後タスク"
-}
-
+## 更新（PUT /tasks/:id）
 {
   "message": "Task updated successfully"
 }
 
-###　レスポンス（異常系）
-
-##作成失敗時
+## 削除（DELETE /tasks/:id）
 {
-  "message": "Task not found"
+  "message": "Task deleted successfully"
 }
 
-##入力値不正
+
+
+## エラー系レスポンス例
+
+### 共通フォーマット
+
+```json
 {
-  "message": "Invalid input"
+  "code": "ERROR_CODE",
+  "message": "エラーメッセージ",
+  "details": []
 }
 
-##削除失敗
+## バリデーションエラー（400）
 {
-  "message": "Invalid delete"
+  "code": "VALIDATION_ERROR",
+  "message": "入力値に誤りがあります",
+  "details": [
+    {
+      "field": "title",
+      "message": "タイトルは必須です"
+    }
+    {
+      "field": "title",
+      "message": "100文字以内で入力してください"
+    }
+  ]
 }
 
-##サーバーエラー
+## リソース未存在（404）
 {
-  "message": "Internal server error"
+  "code": "TASK_NOT_FOUND",
+  "message": "指定されたタスクは存在しません",
+  "details": []
+}
+
+## サーバーエラー（500）
+{
+  "code": "INTERNAL_SERVER_ERROR",
+  "message": "サーバーエラーが発生しました",
+  "details": []
 }
 ````
