@@ -1,0 +1,50 @@
+バックエンド【Node.js】
+・TODO_APP/
+ database/
+ 	/todos.db
+ node_modules/
+ 	※Node.jsの各モジュール。手動での操作はなく、npmコマンドで管理する
+ 	ライブラリのsrcが格納され、Gitignoreに含めるのが一般
+ /.env
+ 	→環境変数を定義。ネットワーク設定やpj固有の設定（DB接続文字列、APIキー、ポート番号）を格納
+ 	node.jsでは【dotenv】ライブラリを使って読み込み。
+ 	Gitignoreに含めて機密情報を守る。（Gitignoreに記載必要？）
+ /package-lock.json
+ 	→package.jsonの依存関係の正確なバージョンとツリーをロックしたファイル。
+ 	npm install時に自動生成される。（チーム全員が同じ依存関係をインストールできるように）
+ /package.json
+ 	→Node.jsプロジェクトの設定ファイル。
+ 	依存関係（dependencies）、スクリプト（script）、プロジェクト名、バージョン、作者の定義が可能
+ /src
+ Node.js（Express.js）はMVCパターンを意識している。
+ １：server.jsからスタート。初期設定（ポート、ミドルウェア）と起動処理
+ ２：db.jsデータベース接続設定。サーバ起動前にDBが使えるようにする
+ ３：routes/はURLルーティングの定義。どのURLがどの処理を部のかを確認する。
+ ４：controllers/は実際のビジネスロジック。routesから呼ばれた処理の実装を見る
+
+フロントエンド【React】
+ package.json/
+ 	→依存関係（react、react-dom、axios(fetch)）
+ 	　開発ツール（vite、eslint,）
+ 	　実行コマンド
+ 	　	npm run dev→開発サーバ起動
+ 	　	npm run build→本番ビルド
+ vite.config.js
+ 	→Viteの設定ファイル
+ 	開発時のproxyが設定されており、/tasksと/healthリクエストを指定URLに転送する。
+ 	フロントはaxiosで/tasksに送信すると、開発時は自動的にbackendへ繋がる。
+ main.jsx
+ 	→Reactアプリのエントリーポイント
+ 	最初だけ読み込まれるところ。
+ src/App.jsx
+ 	→画面の中核となるコンポーネント
+ 	各機能のUIと操作処理を実装。
+ src/api/tasks.js
+ 	→backendとやり取りをまとめた「API層」
+ 	axiosを使用してHTTPリクエストを送る。
+ 	実装されている関数はbackendと紐づき、app.jsxから定義した関数呼び出すだけでbackendにアクセス可能
+ 	本ﾌｧｲﾙにてbackendAPIの呼び出しを行う。
+ 
+ 
+ 
+ 
