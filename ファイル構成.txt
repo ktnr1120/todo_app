@@ -1,0 +1,15 @@
+バックエンド【Node.js】
+・TODO_APP/
+ database/
+ 	/todos.db
+ node_modules/
+ 	※Node.jsの各モジュール。手動での操作はなく、npmコマンドで管理する
+ 	ライブラリのsrcが格納され、Gitignoreに含めるのが一般
+ /src
+ /.env
+ /package-lock.json
+ /package.json
+ 
+ 
+ 
+ 
