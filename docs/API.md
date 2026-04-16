@@ -5,6 +5,9 @@
 ### エンドポイント
 GET /tasks
 
+### 認証
+必須 (セッション認証)
+
 ### クエリパラメータ
 
 | パラメータ | 型  | 必須 | 説明                     |
@@ -12,6 +15,114 @@ GET /tasks
 | page       | int | 任意 | ページ番号（デフォルト:1） |
 | keyword    | string | 任意 | タスク検索キーワード     |
 | status     | string | 任意 | タスクステータスフィルタ（todo, doing, done） |
+
+---
+
+---
+
+## ログイン
+
+### エンドポイント
+
+POST /login
+
+### 認証
+
+不要
+
+### リクエストボディ
+
+| パラメータ | 型     | 必須 | 説明           |
+| ---------- | ------ | ---- | -------------- |
+| email      | string | 必須 | メールアドレス |
+| password   | string | 必須 | パスワード     |
+
+### レスポンス (成功)
+
+```json
+{
+  "message": "Login successful",
+  "user": {
+    "id": 1,
+    "email": "user@example.com",
+    "role": "user"
+  }
+}
+```
+
+### レスポンス (失敗)
+
+```json
+{
+  "message": "メールアドレスまたはパスワードが違います"
+}
+```
+
+---
+
+## ログアウト
+
+### エンドポイント
+
+POST /logout
+
+### 認証
+
+必須
+
+### レスポンス
+
+```json
+{
+  "message": "Logout successful"
+}
+```
+
+---
+
+## 認証状態確認
+
+### エンドポイント
+
+GET /auth/status
+
+### 認証
+
+必須
+
+### レスポンス
+
+```json
+{
+  "authenticated": true,
+  "user": {
+    "id": 1,
+    "email": "user@example.com",
+    "role": "user"
+  }
+}
+```
+
+---
+
+## ヘルスチェック
+
+### エンドポイント
+
+GET /health
+
+### 認証
+
+不要
+
+### レスポンス
+
+```json
+{
+  "status": "OK",
+  "timestamp": "2026-04-16T10:00:00Z"
+}
+```
 
 ---
 

@@ -256,3 +256,106 @@ Invoke-WebRequest -Uri "http://localhost:5174/"
 - `docs/frontend.md`: フロントエンド設計
 - `docs/DB.md`: データベース設計
 - `reports/backend_development_report.md`: 開発レポート
+
+## DB移行手順 (SQLite → PostgreSQL)
+
+### 前提条件
+
+- PostgreSQL インストール済み
+- pgAdmin または psql コマンドラインツール利用可能
+
+### 移行手順
+
+1. **PostgreSQLデータベース作成**
+
+   ```sql
+   CREATE DATABASE todo_app;
+   ```
+
+2. **スキーマ作成**
+
+   ```sql
+   -- usersテーブル作成
+   CREATE TABLE users (
+     id SERIAL PRIMARY KEY,
+     email VARCHAR(255) UNIQUE NOT NULL,
+     password_hash VARCHAR(255) NOT NULL,
+     role VARCHAR(20) NOT NULL CHECK (role IN ('user', 'admin')),
+     locked_until TIMESTAMP,
+     login_attempts INTEGER DEFAULT 0,
+     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+     updated_at TIMESTAMP
+   );
+
+   -- tasksテーブル作成（user_id追加）
+   CREATE TABLE tasks (
+     id SERIAL PRIMARY KEY,
+     user_id INTEGER NOT NULL REFERENCES users(id),
+     title VARCHAR(100) NOT NULL,
+     status VARCHAR(20) NOT NULL CHECK (status IN ('todo', 'doing', 'done')),
+     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+     updated_at TIMESTAMP
+   );
+   ```
+
+3. **データ移行**
+   - SQLiteデータをエクスポート
+   - PostgreSQLにインポート
+   - 既存タスクにデフォルトuser_id割り当て
+
+4. **接続設定変更**
+   - backend/package.json に pg ライブラリ追加
+   - db.js の接続設定をPostgreSQLに変更
+
+## 認証機能運用
+
+### 初期ユーザー作成
+
+開発環境でのテスト用ユーザー作成：
+
+```sql
+-- 管理者ユーザー作成
+INSERT INTO users (email, password_hash, role) VALUES (
+  'admin@example.com',
+  '$2b$10$...', -- bcryptハッシュ化したパスワード
+  'admin'
+);
+
+-- 一般ユーザー作成
+INSERT INTO users (email, password_hash, role) VALUES (
+  'user@example.com',
+  '$2b$10$...',
+  'user'
+);
+```
+
+### セッション管理
+
+- セッションはメモリ/Redis保存（本番環境ではRedis推奨）
+- セッション有効期限: 30分
+- HttpOnly, Secure属性設定
+
+### ログ確認
+
+サーバーログで認証関連イベント確認：
+
+```
+[INFO] User login successful: user@example.com
+[WARNING] Login failed: invalid credentials for user@example.com
+```
+
+## セキュリティ運用
+
+### HTTPS設定
+
+本番環境ではHTTPS必須：
+
+- 自己署名証明書作成
+- 環境変数で証明書パス設定
+- Secure属性有効化
+
+### 定期メンテナンス
+
+- 古いセッションクリーンアップ
+- ロックアウトアカウント監視
+- パスワードポリシー確認
