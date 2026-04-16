@@ -2,6 +2,16 @@ const fs = require('fs');
 const path = require('path');
 const sqlite3 = require('sqlite3').verbose();
 
+// TODO: ログイン機能追加 - PostgreSQL移行時に以下を変更
+// const { Pool } = require('pg');
+// const pool = new Pool({
+//   host: process.env.DB_HOST,
+//   port: process.env.DB_PORT,
+//   database: process.env.DB_NAME,
+//   user: process.env.DB_USER,
+//   password: process.env.DB_PASSWORD,
+// });
+
 // 環境変数からDBパスを読み込み。指定がなければ backend/database/todos.db を使う
 const dbPath = process.env.DB_PATH || path.join(__dirname, '../database/todos.db');
 const dbDir = path.dirname(dbPath);
@@ -32,6 +42,9 @@ db.serialize(() => {
       updated_at TEXT
     )
   `);
+  // TODO: ログイン機能追加 - usersテーブル作成とtasksテーブルにuser_id追加
+  // db.run(`CREATE TABLE IF NOT EXISTS users (...)`);
+  // db.run(`ALTER TABLE tasks ADD COLUMN user_id INTEGER REFERENCES users(id)`);
 });
 
 // 他のモジュールから db を使えるようにエクスポート

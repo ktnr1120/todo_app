@@ -102,3 +102,5 @@ sessions/
 # Build outputs
 build/
 dist/
+
+work/

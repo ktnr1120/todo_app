@@ -2,9 +2,32 @@
 const router = express.Router();
 const taskController = require('../controllers/taskController');
 
+// TODO: ログイン機能追加 - 認証ミドルウェア適用
+// const authMiddleware = require('../middleware/auth');
+// router.use(authMiddleware); // 全タスクルートに認証必須
+
 // タスク一覧取得（GET /tasks）
 // クエリパラメータ: page, keyword, status
 router.get('/', taskController.getTasks);
+
+// タスク詳細取得（GET /tasks/:id）
+// パスパラメータ: id（タスクID）
+router.get('/:id', taskController.getTaskById);
+
+// タスク作成（POST /tasks）
+// リクエストボディ: { title: string, status?: string }
+router.post('/', taskController.createTask);
+
+// タスク更新（PUT /tasks/:id）
+// パスパラメータ: id（タスクID）
+// リクエストボディ: { title?: string, status?: string }
+router.put('/:id', taskController.updateTask);
+
+// タスク削除（DELETE /tasks/:id）
+// パスパラメータ: id（タスクID）
+router.delete('/:id', taskController.deleteTask);
+
+module.exports = router;
 
 // タスク詳細取得（GET /tasks/:id）
 // パスパラメータ: id（タスクID）
