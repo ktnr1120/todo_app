@@ -257,16 +257,16 @@ Invoke-WebRequest -Uri "http://localhost:5174/"
 - `docs/DB.md`: データベース設計
 - `reports/backend_development_report.md`: 開発レポート
 
-## DB移行手順 (SQLite → PostgreSQL)
+## DB移行手順 (SQLite → MariaDB)
 
 ### 前提条件
 
-- PostgreSQL インストール済み
-- pgAdmin または psql コマンドラインツール利用可能
+- MariaDB インストール済み
+- MySQL Workbench またはコマンドラインツール利用可能
 
 ### 移行手順
 
-1. **PostgreSQLデータベース作成**
+1. **MariaDBデータベース作成**
 
    ```sql
    CREATE DATABASE todo_app;
@@ -277,24 +277,25 @@ Invoke-WebRequest -Uri "http://localhost:5174/"
    ```sql
    -- usersテーブル作成
    CREATE TABLE users (
-     id SERIAL PRIMARY KEY,
+     id INT AUTO_INCREMENT PRIMARY KEY,
      email VARCHAR(255) UNIQUE NOT NULL,
      password_hash VARCHAR(255) NOT NULL,
-     role VARCHAR(20) NOT NULL CHECK (role IN ('user', 'admin')),
-     locked_until TIMESTAMP,
-     login_attempts INTEGER DEFAULT 0,
+     role ENUM('user', 'admin') NOT NULL DEFAULT 'user',
+     locked_until TIMESTAMP NULL,
+     login_attempts INT DEFAULT 0,
      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-     updated_at TIMESTAMP
+     updated_at TIMESTAMP NULL ON UPDATE CURRENT_TIMESTAMP
    );
 
    -- tasksテーブル作成（user_id追加）
    CREATE TABLE tasks (
-     id SERIAL PRIMARY KEY,
-     user_id INTEGER NOT NULL REFERENCES users(id),
+     id INT AUTO_INCREMENT PRIMARY KEY,
+     user_id INT NOT NULL,
      title VARCHAR(100) NOT NULL,
-     status VARCHAR(20) NOT NULL CHECK (status IN ('todo', 'doing', 'done')),
+     status ENUM('todo', 'doing', 'done') NOT NULL DEFAULT 'todo',
      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-     updated_at TIMESTAMP
+     updated_at TIMESTAMP NULL ON UPDATE CURRENT_TIMESTAMP,
+     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
    );
    ```
 
@@ -304,8 +305,8 @@ Invoke-WebRequest -Uri "http://localhost:5174/"
    - 既存タスクにデフォルトuser_id割り当て
 
 4. **接続設定変更**
-   - backend/package.json に pg ライブラリ追加
-   - db.js の接続設定をPostgreSQLに変更
+   - backend/package.json に mysql2 ライブラリ追加
+   - db.js の接続設定をMariaDBに変更
 
 ## 認証機能運用
 

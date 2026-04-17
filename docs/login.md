@@ -107,25 +107,25 @@
 
 ### 4.1 DB移行
 
-- SQLite → PostgreSQLに移行
+- SQLite → MariaDB(MySQL互換)に移行
 - 既存データはマイグレーションスクリプトで移行
 
 ### 4.2 usersテーブル
 
-| カラム名       | 型           | 制約                                        | 説明                        |
-| -------------- | ------------ | ------------------------------------------- | --------------------------- |
-| id             | SERIAL       | PRIMARY KEY                                 | ユーザーID                  |
-| email          | VARCHAR(255) | UNIQUE, NOT NULL                            | メールアドレス              |
-| password_hash  | VARCHAR(255) | NOT NULL                                    | パスワードハッシュ (bcrypt) |
-| role           | VARCHAR(20)  | NOT NULL, CHECK (role IN ('user', 'admin')) | ロール                      |
-| locked_until   | TIMESTAMP    |                                             | アカウントロック解除時刻    |
-| login_attempts | INTEGER      | DEFAULT 0                                   | ログイン失敗回数            |
-| created_at     | TIMESTAMP    | DEFAULT CURRENT_TIMESTAMP                   | 作成日時                    |
-| updated_at     | TIMESTAMP    |                                             | 更新日時                    |
+| カラム名       | 型                    | 制約                             | 説明                        |
+| -------------- | --------------------- | -------------------------------- | --------------------------- |
+| id             | INT AUTO_INCREMENT    | PRIMARY KEY                      | ユーザーID                  |
+| email          | VARCHAR(255)          | UNIQUE, NOT NULL                 | メールアドレス              |
+| password_hash  | VARCHAR(255)          | NOT NULL                         | パスワードハッシュ (bcrypt) |
+| role           | ENUM('user', 'admin') | NOT NULL, DEFAULT 'user'         | ロール                      |
+| locked_until   | TIMESTAMP             | NULL                             | アカウントロック解除時刻    |
+| login_attempts | INT                   | DEFAULT 0                        | ログイン失敗回数            |
+| created_at     | TIMESTAMP             | DEFAULT CURRENT_TIMESTAMP        | 作成日時                    |
+| updated_at     | TIMESTAMP             | NULL ON UPDATE CURRENT_TIMESTAMP | 更新日時                    |
 
 ### 4.3 todosテーブル変更
 
-- user_idカラム追加 (INTEGER, NOT NULL, FOREIGN KEY REFERENCES users(id))
+- user_idカラム追加 (INT, NOT NULL, FOREIGN KEY REFERENCES users(id))
 - 既存タスクはデフォルトユーザー割り当て
 
 ## 5. フロントエンド設計

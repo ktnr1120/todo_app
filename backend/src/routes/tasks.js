@@ -2,10 +2,6 @@
 const router = express.Router();
 const taskController = require('../controllers/taskController');
 
-// TODO: ログイン機能追加 - 認証ミドルウェア適用
-// const authMiddleware = require('../middleware/auth');
-// router.use(authMiddleware); // 全タスクルートに認証必須
-
 // タスク一覧取得（GET /tasks）
 // クエリパラメータ: page, keyword, status
 router.get('/', taskController.getTasks);

@@ -1,8 +1,5 @@
 ﻿const db = require('../db');
 
-// TODO: ログイン機能追加 - 認証チェック用ミドルウェアインポート
-// const authMiddleware = require('../middleware/auth');
-
 // 有効なステータス値の定義
 const VALID_STATUSES = ['todo', 'doing', 'done'];
 // デフォルトの1ページあたりの表示件数
@@ -22,10 +19,6 @@ function sendError(res, code, message, status = 400) {
 // クエリパラメータ: page, keyword, status
 // ページング、キーワード検索、ステータスフィルタに対応
 exports.getTasks = (req, res) => {
-  // TODO: ログイン機能追加 - ユーザー固有のタスクのみ取得
-  // const userId = req.session.userId;
-  // conditions.push('user_id = ?');
-  // params.push(userId);
   // クエリパラメータからページ番号を取得（デフォルト1ページ目）
   const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
   const perPage = DEFAULT_PER_PAGE;
@@ -112,10 +105,7 @@ exports.createTask = (req, res) => {
   }
 
   const query = 'INSERT INTO tasks (title, status) VALUES (?, ?)';
-  // TODO: ログイン機能追加 - user_id追加
-  // const userId = req.session.userId;
-  // const query = 'INSERT INTO tasks (title, status, user_id) VALUES (?, ?, ?)';
-  // db.run(query, [title, status, userId], function (err) {
+  db.run(query, [title, status], function (err) {
     if (err) {
       return sendError(res, 'DB_ERROR', 'タスクの作成に失敗しました', 500);
     }
@@ -155,11 +145,6 @@ exports.updateTask = (req, res) => {
       return sendError(res, 'NOT_FOUND', 'タスクが見つかりません', 404);
     }
 
-    // TODO: ログイン機能追加 - 所有者チェック
-    // if (task.user_id !== req.session.userId) {
-    //   return sendError(res, 'FORBIDDEN', 'アクセス権限がありません', 403);
-    // }
-
     const updates = [];
     const params = [];
 
@@ -195,14 +180,6 @@ exports.deleteTask = (req, res) => {
     return sendError(res, 'VALIDATION_ERROR', 'IDが不正です', 400);
   }
 
-  // TODO: ログイン機能追加 - 所有者チェック
-  // db.get('SELECT user_id FROM tasks WHERE id = ?', [id], (findErr, task) => {
-  //   if (findErr) return sendError(res, 'DB_ERROR', 'タスクの取得に失敗しました', 500);
-  //   if (!task) return sendError(res, 'NOT_FOUND', 'タスクが見つかりません', 404);
-  //   if (task.user_id !== req.session.userId) {
-  //     return sendError(res, 'FORBIDDEN', 'アクセス権限がありません', 403);
-  //   }
-
   db.run('DELETE FROM tasks WHERE id = ?', [id], function (err) {
     if (err) {
       return sendError(res, 'DB_ERROR', 'タスクの削除に失敗しました', 500);
@@ -212,6 +189,4 @@ exports.deleteTask = (req, res) => {
     }
     return res.json({ message: 'Task deleted successfully' });
   });
-  // TODO: ログイン機能追加 - 所有者チェック後の削除処理
-  // });
 };
