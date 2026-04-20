@@ -1,38 +1,32 @@
-const fs = require('fs');
-const path = require('path');
-const sqlite3 = require('sqlite3').verbose();
+/*******************************************
+*
+*   ファイル名     ：db.js
+*   概要           ：MariaDBへの接続設定
+*
+*********************************************/
 
-// 環境変数からDBパスを読み込み。指定がなければ backend/database/todos.db を使う
-const dbPath = process.env.DB_PATH || path.join(__dirname, '../database/todos.db');
-const dbDir = path.dirname(dbPath);
+const mysql = require('mysql2');
 
-// DBファイル格納先のディレクトリが存在しない場合は作成する
-if (!fs.existsSync(dbDir)) {
-  fs.mkdirSync(dbDir, { recursive: true });
-}
+// MariaDB接続プール
+const pool = mysql.createPool({
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
+});
 
-// SQLiteデータベースに接続
-const db = new sqlite3.Database(dbPath, (err) => {
-  if (err) {
-    console.error('Failed to connect to SQLite database:', err);
+// 接続テスト
+pool.getConnection((err, connection) => {
+  if(err) {
+    console.error('DB接続エラー', err);
     process.exit(1);
   }
-  console.log('Connected to SQLite database:', dbPath);
+  console.log('DB接続成功');
+  connection.release();
 });
 
-// 初回起動時に tasks テーブルを作成する
-// すでに存在する場合は何もしない
-db.serialize(() => {
-  db.run(`
-    CREATE TABLE IF NOT EXISTS tasks (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      title TEXT NOT NULL,
-      status TEXT NOT NULL CHECK (status IN ('todo', 'doing', 'done')),
-      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      updated_at TEXT
-    )
-  `);
-});
-
-// 他のモジュールから db を使えるようにエクスポート
-module.exports = db;
+module.exports = pool;
