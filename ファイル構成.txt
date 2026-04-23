@@ -1,15 +1,63 @@
 バックエンド【Node.js】
-・TODO_APP/
- database/
- 	/todos.db
- node_modules/
- 	※Node.jsの各モジュール。手動での操作はなく、npmコマンドで管理する
- 	ライブラリのsrcが格納され、Gitignoreに含めるのが一般
- /src
- /.env
- /package-lock.json
- /package.json
- 
- 
- 
- 
+backend/
+├── src/
+│   ├── controllers/      ← リクエスト/レスポンス制御
+│   │    └── taskController.js
+│   │
+│   ├── routes/           ← ルーティング定義
+│   │    └── taskRoutes.js
+│   │
+│   ├── services/         ← ビジネスロジック（重要）
+│   │    └── taskService.js
+│   │
+│   ├── models/           ← DBアクセス（SQL・ORM）
+│   │    └── taskModel.js
+│   │
+│   ├── middleware/       ← 認証・ログなど
+│   │    └── authMiddleware.js
+│   │
+│   ├── config/           ← 設定系（DB接続など）
+│   │    └── db.js
+│   │
+│   └── app.js            ← Express設定
+│
+├── database/
+│   └── migrate.js        ← マイグレーション専用
+│
+├── .env
+├── package.json
+└── server.js             ← エントリポイント
+
+・controllers
+HTTPを扱うだけ
+「リクエスト受け取る → service呼ぶ → レスポンス返す」
+->ロジックは書かない
+
+・services
+アプリの本体
+「TODO作成」「ログイン処理」などを書く
+ー＞ここが肥大化してOK（むしろここに集める）
+
+・models
+DB操作専用
+SQLを書く場所
+ー＞「DBをどう触るか」だけを書く
+
+・middleware
+認証（JWTとか）
+ログ
+エラーハンドリング
+ー＞ログイン機能やるならここ必須
+
+・config
+DB接続
+
+① models（DB操作）
+↓
+② services（ビジネスロジック）
+↓
+③ controllers（APIの入り口）
+↓
+④ routes（URL紐付け）
+↓
+⑤ middleware（必要なら）

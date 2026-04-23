@@ -1,4 +1,11 @@
-﻿const express = require('express');
+﻿/*******************************************
+*
+*   ファイル名     ：tasks.js
+*   概要           ：ルーティング定義
+*
+*********************************************/
+
+const express = require('express');
 const router = express.Router();
 const taskController = require('../controllers/taskController');
 

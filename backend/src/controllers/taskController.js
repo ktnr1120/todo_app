@@ -1,4 +1,11 @@
-﻿const db = require('../db');
+﻿/*******************************************
+*
+*   ファイル名     ：taskController.js
+*   概要           ：リクエスト／レスポンス制御
+*
+*********************************************/
+
+const db = require('../config/db');
 
 // 有効なステータス値の定義
 const VALID_STATUSES = ['todo', 'doing', 'done'];

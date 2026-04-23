@@ -4,7 +4,7 @@
 *   概要           ：データベースのCRUD操作処理
 *
 *********************************************/
-const db = require('../src/db');
+const db = require('../src/config/db');
 
 async function migrate() {
     try {

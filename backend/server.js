@@ -1,3 +1,10 @@
+/*******************************************
+*
+*   ファイル名     ：server.js
+*   概要           ：ビジネスロジックとルーティングの統合、サーバー起動処理
+*
+*********************************************/
+
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -14,8 +21,8 @@ app.use(cors());
 // app.use('/tasks', tasksRouter);
 
 // DBとルートを読み込む
-const db = require('./db');
-const tasksRouter = require('./routes/tasks');
+const db = require('./src/config/db');
+const tasksRouter = require('./src/routes/tasks');
 app.use('/tasks', tasksRouter);
 
 // ヘルスチェック（動作確認用）
