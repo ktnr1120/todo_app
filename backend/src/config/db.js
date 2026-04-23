@@ -5,7 +5,7 @@
 *
 *********************************************/
 
-const mysql = require('mysql2');
+const mysql = require('mysql2/promise');
 
 // MariaDB接続プール
 const pool = mysql.createPool({
