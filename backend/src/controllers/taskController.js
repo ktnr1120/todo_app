@@ -5,6 +5,19 @@
 *
 *********************************************/
 
+const taskService = require('../services/taskService');
+
+exports.getTasks = async (req, res) => {
+  try {
+    const result = await taskService.getTasks(req.query);
+    res.json(result);
+  } catch (err) {
+    res.status(400).json({ message: err.message});
+  }
+};
+
+// 以下はDBマイグレ前のコード。
+/*
 const db = require('../config/db');
 
 // 有効なステータス値の定義
@@ -197,3 +210,4 @@ exports.deleteTask = (req, res) => {
     return res.json({ message: 'Task deleted successfully' });
   });
 };
+*/

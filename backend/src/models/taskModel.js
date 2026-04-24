@@ -8,6 +8,23 @@
 // DB接続プールをインポート
 const db = require('../config/db');
 
+async function countTasks(where, params) {
+    const sql = `
+        SELECT id, title, status
+        FROM tasks
+        ${where}
+        ORDER BY id DESC
+        LIMIT ? OFFSET ?
+    `;
+    const [rows] = await db.execute(sql, [...params, limit, offset]);
+    return rows;
+}
+
+module.exports = {
+    countTasks
+};
+
+/*
 async function insertTask(title) {
     // sqlにSQLクエリを設定
     const sql = 'INSERT INTO tasks (title) VALUES (?)';
@@ -15,6 +32,7 @@ async function insertTask(title) {
     const [result] = await db.execute(sql, [title]);
     return result;
 }
+*/
 
 // 他のDB操作関数もここに追加可能（例: getTasks, updateTask, deleteTaskなど）
 module.exports = {
