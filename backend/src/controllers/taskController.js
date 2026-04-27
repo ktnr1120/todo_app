@@ -6,24 +6,14 @@
 *********************************************/
 
 const taskService = require('../services/taskService');
-
-exports.getTasks = async (req, res) => {
-  try {
-    const result = await taskService.getTasks(req.query);
-    res.json(result);
-  } catch (err) {
-    res.status(400).json({ message: err.message});
-  }
-};
-
-// 以下はDBマイグレ前のコード。
-/*
+//const taskModel = require('../models/taskModel');
 const db = require('../config/db');
 
 // 有効なステータス値の定義
 const VALID_STATUSES = ['todo', 'doing', 'done'];
 // デフォルトの1ページあたりの表示件数
 const DEFAULT_PER_PAGE = 10;
+
 
 // ステータス値のバリデーション関数
 function validateStatus(status) {
@@ -34,6 +24,18 @@ function validateStatus(status) {
 function sendError(res, code, message, status = 400) {
   return res.status(status).json({ code, message, details: [] });
 }
+
+
+exports.getTasks = async (req, res) => {
+  try {
+    const result = await taskService.getTasks(req.query);
+    res.json(result);
+  } catch (err) {
+    res.status(400).json({ message: err.message});
+  }
+};
+
+
 
 // タスク一覧取得（GET /tasks）
 // クエリパラメータ: page, keyword, status
@@ -66,39 +68,37 @@ exports.getTasks = (req, res) => {
 
   const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
-  // 総件数を取得
-  db.get(`SELECT COUNT(*) AS count FROM tasks ${whereClause}`, params, (countErr, row) => {
+  // ★総件数を取得
+  taskModel.countTasks(whereClause, params, (countErr, countRow) => {
     if (countErr) {
       return sendError(res, 'DB_ERROR', 'タスクの取得に失敗しました', 500);
     }
 
-    const total = row.count;
-    // タスク一覧を取得（ページング適用）
-    db.all(
-      `SELECT id, title, status FROM tasks ${whereClause} ORDER BY id DESC LIMIT ? OFFSET ?`,
-      [...params, perPage, offset],
-      (listErr, tasks) => {
-        if (listErr) {
-          return sendError(res, 'DB_ERROR', 'タスク一覧の取得に失敗しました', 500);
-        }
+    const total = countRow.count;
 
-        return res.json({
-          page,
-          per_page: perPage,
-          total,
-          tasks,
-        });
+    // ★タスク一覧を取得（ページング適用）
+    taskModel.findTasks(whereClause, params, perPage, offset, (listErr, tasks) => {
+      if (listErr) {
+        return sendError(res, 'DB_ERROR', 'タスク一覧の取得に失敗しました', 500);
       }
-    );
+
+      return res.json({
+        page,
+        per_page: perPage,
+        total,
+        tasks,
+      });
+    });
   });
 };
+
 
 exports.getTaskById = (req, res) => {
   const id = parseInt(req.params.id, 10);
   if (Number.isNaN(id)) {
     return sendError(res, 'VALIDATION_ERROR', 'IDが不正です', 400);
   }
-
+  // ★IDに該当するタスクを取得
   db.get('SELECT * FROM tasks WHERE id = ?', [id], (err, task) => {
     if (err) {
       return sendError(res, 'DB_ERROR', 'タスクの取得に失敗しました', 500);
@@ -125,12 +125,14 @@ exports.createTask = (req, res) => {
   }
 
   const query = 'INSERT INTO tasks (title, status) VALUES (?, ?)';
+  // ★新しいタスクを挿入
   db.run(query, [title, status], function (err) {
     if (err) {
       return sendError(res, 'DB_ERROR', 'タスクの作成に失敗しました', 500);
     }
 
     const newTaskId = this.lastID;
+    // ★作成したタスクの詳細を取得してレスポンスに返す
     db.get('SELECT * FROM tasks WHERE id = ?', [newTaskId], (getErr, task) => {
       if (getErr) {
         return sendError(res, 'DB_ERROR', '作成したタスクの取得に失敗しました', 500);
@@ -157,6 +159,7 @@ exports.updateTask = (req, res) => {
     return sendError(res, 'VALIDATION_ERROR', 'statusの値が不正です', 400);
   }
 
+  // ★IDに該当するタスクが存在するか確認
   db.get('SELECT * FROM tasks WHERE id = ?', [id], (findErr, task) => {
     if (findErr) {
       return sendError(res, 'DB_ERROR', 'タスクの取得に失敗しました', 500);
@@ -185,6 +188,7 @@ exports.updateTask = (req, res) => {
     params.push(id);
 
     const updateQuery = `UPDATE tasks SET ${updates.join(', ')}, updated_at = ? WHERE id = ?`;
+    // ★タスクを更新
     db.run(updateQuery, params, (updateErr) => {
       if (updateErr) {
         return sendError(res, 'DB_ERROR', 'タスクの更新に失敗しました', 500);
@@ -200,6 +204,7 @@ exports.deleteTask = (req, res) => {
     return sendError(res, 'VALIDATION_ERROR', 'IDが不正です', 400);
   }
 
+  // ★IDに該当するタスクが存在するか確認
   db.run('DELETE FROM tasks WHERE id = ?', [id], function (err) {
     if (err) {
       return sendError(res, 'DB_ERROR', 'タスクの削除に失敗しました', 500);
@@ -210,4 +215,3 @@ exports.deleteTask = (req, res) => {
     return res.json({ message: 'Task deleted successfully' });
   });
 };
-*/

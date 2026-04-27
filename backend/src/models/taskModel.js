@@ -8,6 +8,7 @@
 // DB接続プールをインポート
 const db = require('../config/db');
 
+/*
 async function countTasks(where, params) {
     const sql = `
         SELECT id, title, status
@@ -19,9 +20,28 @@ async function countTasks(where, params) {
     const [rows] = await db.execute(sql, [...params, limit, offset]);
     return rows;
 }
+*/
+
+// タスクの件数を取得する関数
+exports.countTasks = (whereClause, params, callback) => {
+    db.getConnection(
+        `SELECT COUNT(*) AS count FROM tasks ${whereClause}`,
+        params,
+        callback
+    );
+};
+
+exports.findTasks = (whereClause, params, perPage, offset, callback) => {
+    db.all(
+      `SELECT id, title, status FROM tasks ${whereClause} ORDER BY id DESC LIMIT ? OFFSET ?`,
+      [...params, perPage, offset],
+      callback
+    );
+};
 
 module.exports = {
-    countTasks
+    countTasks,
+    findTasks
 };
 
 /*
