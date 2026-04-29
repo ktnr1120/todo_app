@@ -115,6 +115,7 @@ exports.getTasks = async  (req, res) => {
 
   // ★総件数を取得
   try {
+    // Modelの関数を呼び出してタスク一覧を取得
     const result = await taskModel.getTasksList({
       page,
       perPage,

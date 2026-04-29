@@ -27,11 +27,13 @@ exports.getTasksList = ({ page, perPage, keyword, status }) => {
         const conditions = [];
         const params = [];
 
+        // キーワード検索（タイトルに含まれる場合）
         if (keyword) {
             conditions.push('title LIKE ?');
             params.push(`%${keyword}%`);
         }
 
+        // ステータ条件追加
         if (status) {
             conditions.push('status = ?');
             params.push(status);
@@ -39,13 +41,16 @@ exports.getTasksList = ({ page, perPage, keyword, status }) => {
 
         const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
+        // ★総件数を取得してからタスク一覧を取得する
         db.get(`SELECT COUNT(*) AS count FROM tasks ${whereClause}`, params, (countErr, countResult) => {
             if (countErr) {
                 return reject(countErr);
             }
 
+            // 総件数を取得
             const total = countResult.count;
 
+            // ★複数行取得
             db.all(
                 `SELECT id,title,status,created_at,updated_at
                 FROM tasks ${whereClause}
@@ -57,6 +62,7 @@ exports.getTasksList = ({ page, perPage, keyword, status }) => {
                     return reject(listErr);
                     }
 
+                    // 取得したタスク一覧と総件数を返す
                     resolve({ 
                         page,
                         per_page: perPage,
