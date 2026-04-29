@@ -17,6 +17,7 @@ exports.countTasks = (whereClause, params, callback) => {
     );
 };
 
+// タスクを取得する関数
 exports.findTasks = (whereClause, params, perPage, offset, callback) => {
     db.all(
       `SELECT id, title, status FROM tasks ${whereClause} ORDER BY id DESC LIMIT ? OFFSET ?`,

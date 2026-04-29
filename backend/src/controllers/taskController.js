@@ -6,7 +6,7 @@
 *********************************************/
 
 const taskService = require('../services/taskService');
-//const taskModel = require('../models/taskModel');
+const taskModel = require('../models/taskModel');
 const db = require('../config/db');
 
 // 有効なステータス値の定義
@@ -25,7 +25,7 @@ function sendError(res, code, message, status = 400) {
   return res.status(status).json({ code, message, details: [] });
 }
 
-
+/*2026.04.29改修前
 exports.getTasks = async (req, res) => {
   try {
     const result = await taskService.getTasks(req.query);
@@ -34,8 +34,6 @@ exports.getTasks = async (req, res) => {
     res.status(400).json({ message: err.message});
   }
 };
-
-
 
 // タスク一覧取得（GET /tasks）
 // クエリパラメータ: page, keyword, status
@@ -57,7 +55,7 @@ exports.getTasks = (req, res) => {
     params.push(`%${keyword}%`);
   }
 
-  // ステータスフィルタ
+  // ステータスフィルタ(バリデーションも実施)
   if (status) {
     if (!VALID_STATUSES.includes(status)) {
       return sendError(res, 'VALIDATION_ERROR', 'statusの値が不正です', 400);
@@ -91,8 +89,55 @@ exports.getTasks = (req, res) => {
     });
   });
 };
+*/
+
+/*******************************************************************************
+*
+*   メソッド名         ：タスク一覧取得（GET /tasks）
+*   クエリパラメータ   ：page    = 表示ページ番号
+*                        keyword = タイトル検索キーワード
+*                        status  = タスク状態(todo / doing / done)
+*   処理概要           ：条件に一致するタスク一覧をページングして取得する
+*   備考               ：ページング、キーワード検索、ステータス絞り込み対応
+*   作成日             ：2026.04.29
+*
+*******************************************************************************/
+exports.getTasks = async  (req, res) => {
+  // クエリパラメータからページ番号を取得（デフォルト1ページ目）
+  const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+  const perPage = DEFAULT_PER_PAGE;
+  const { keyword, status } = req.query;
+
+  // ステータスフィルタ(バリデーションも実施)
+  if (status && !VALID_STATUSES.includes(status)) {
+    return sendError(res, 'VALIDATION_ERROR', 'statusの値が不正です', 400);
+  }
+
+  // ★総件数を取得
+  try {
+    const result = await taskModel.getTasksList({
+      page,
+      perPage,
+      keyword,
+      status
+    });
+
+    return res.json(result);
+
+  } catch (Err) {
+    return sendError(res, 'DB_ERROR', 'タスクの取得に失敗しました', 500);
+  }
+};
 
 
+/*******************************************************************************
+*                                                                 2026.04.xx追加
+*         メソッド             ：タスク詳細取得（GET /tasks/:id）
+*         クエリパラメータ      ：なし
+*         内容                 ：URLパラメータで受け取ったIDに該当するタスクの詳細を返す
+*         備考                 ：IDに該当するタスクを取得
+*
+*******************************************************************************/
 exports.getTaskById = (req, res) => {
   const id = parseInt(req.params.id, 10);
   if (Number.isNaN(id)) {
@@ -111,6 +156,15 @@ exports.getTaskById = (req, res) => {
   });
 };
 
+
+/*******************************************************************************
+*                                                                 2026.04.xx追加
+*         メソッド             ：タスク作成（POST /tasks）
+*         クエリパラメータ      ：タイトルは必須、ステータスは任意（デフォルトは'todo'）
+*         内容                 ：タイトルとステータスを受け取り、新しいタスクを作成
+*         備考                 ：入力バリデーションも実施
+*
+*******************************************************************************/
 exports.createTask = (req, res) => {
   const { title, status = 'todo' } = req.body;
 
@@ -142,6 +196,15 @@ exports.createTask = (req, res) => {
   });
 };
 
+
+/*******************************************************************************
+*                                                                 2026.04.xx追加
+*         メソッド             ：タスク更新（PUT /tasks/:id）
+*         クエリパラメータ      ：ID（URLパラメータ）
+*         内容                 ：タイトルとステータスの両方、またはいずれかを更新可能
+*         備考                 ：入力バリデーションも実施
+*
+*******************************************************************************/
 exports.updateTask = (req, res) => {
   const id = parseInt(req.params.id, 10);
   const { title, status } = req.body;
@@ -198,6 +261,15 @@ exports.updateTask = (req, res) => {
   });
 };
 
+
+/*******************************************************************************
+*                                                                 2026.04.xx追加
+*         メソッド             ：タスク削除（DELETE /tasks/:id）
+*         クエリパラメータ      ：ID（URLパラメータ）
+*         内容                 ：IDに該当するタスクを削除
+*         備考                 ：IDに該当するタスクが存在するか確認し、存在しない場合は404エラーを返す
+*
+*******************************************************************************/
 exports.deleteTask = (req, res) => {
   const id = parseInt(req.params.id, 10);
   if (Number.isNaN(id)) {
