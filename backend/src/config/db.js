@@ -2,10 +2,18 @@
 *
 *   ファイル名     ：db.js
 *   概要           ：MariaDBへの接続設定
+*   作成日         :2026.4.30
+*   改修内容       :SQlite→MariaDBへマイグレ
 *
 *********************************************/
 
 const mysql = require('mysql2/promise');
+
+// 接続エラー処理
+if (!process.env.DB_HOST || !process.env.DB_USER || !process.env.DB_NAME) {
+  console.error('DB環境変数が設定されていません。');
+  process.exit(1);
+}
 
 // MariaDB接続プール
 const pool = mysql.createPool({
@@ -19,14 +27,18 @@ const pool = mysql.createPool({
   queueLimit: 0
 });
 
-// 接続テスト
-pool.getConnection((err, connection) => {
-  if(err) {
+// 接続確認
+(async () => {
+  try {
+    const connection = await pool.getConnection();
+    console.log('DB接続成功');
+    connection/release();
+  }
+  catch (err)
+  {
     console.error('DB接続エラー', err);
     process.exit(1);
   }
-  console.log('DB接続成功');
-  connection.release();
-});
+})();
 
 module.exports = pool;

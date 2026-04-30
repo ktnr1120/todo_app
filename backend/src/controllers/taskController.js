@@ -25,17 +25,8 @@ function sendError(res, code, message, status = 400) {
   return res.status(status).json({ code, message, details: [] });
 }
 
-/*2026.04.29改修前
-exports.getTasks = async (req, res) => {
-  try {
-    const result = await taskService.getTasks(req.query);
-    res.json(result);
-  } catch (err) {
-    res.status(400).json({ message: err.message});
-  }
-};
 
-// タスク一覧取得（GET /tasks）
+/* タスク一覧取得（GET /tasks）
 // クエリパラメータ: page, keyword, status
 // ページング、キーワード検索、ステータスフィルタに対応
 exports.getTasks = (req, res) => {
@@ -130,31 +121,46 @@ exports.getTasks = async  (req, res) => {
   }
 };
 
+/*2026.04.18新規
+exports.getTasks = async (req, res) => {
+  try {
+    const result = await taskService.getTasks(req.query);
+    res.json(result);
+  } catch (err) {
+    res.status(400).json({ message: err.message});
+  }
+};
+*/
+
 
 /*******************************************************************************
-*                                                                 2026.04.xx追加
-*         メソッド             ：タスク詳細取得（GET /tasks/:id）
-*         クエリパラメータ      ：なし
-*         内容                 ：URLパラメータで受け取ったIDに該当するタスクの詳細を返す
-*         備考                 ：IDに該当するタスクを取得
+*
+*   メソッド名         ：タスク詳細取得（GET /tasks/:id）
+*   URLパラメータ      ：id = タスクID
+*   処理概要           ：指定したIDに該当するタスク詳細を取得する
+*   備考               ：該当データが存在しない場合は404エラーを返す
 *
 *******************************************************************************/
-exports.getTaskById = (req, res) => {
+exports.getTaskById = async (req, res) => {
   const id = parseInt(req.params.id, 10);
+  // バリデーション
   if (Number.isNaN(id)) {
     return sendError(res, 'VALIDATION_ERROR', 'IDが不正です', 400);
   }
-  // ★IDに該当するタスクを取得
-  db.get('SELECT * FROM tasks WHERE id = ?', [id], (err, task) => {
-    if (err) {
-      return sendError(res, 'DB_ERROR', 'タスクの取得に失敗しました', 500);
-    }
-    if (!task) {
+
+  try {
+    const result = await taskModel.getTaskById(id);
+    return res.json(result);
+
+  } catch {
+    // ★IDに該当するタスクが存在しない場合は404エラーを返す
+    if (err.code === 'NOT_FOUND')
+    {
       return sendError(res, 'NOT_FOUND', 'タスクが見つかりません', 404);
     }
-
-    return res.json(task);
-  });
+    // その他のエラーはDBエラーとして500エラーを返す
+    return sendError(res, 'DB_ERROR', 'タスクの削除に失敗しました', 500);
+  }
 };
 
 
@@ -264,13 +270,40 @@ exports.updateTask = (req, res) => {
 
 
 /*******************************************************************************
-*                                                                 2026.04.xx追加
+*                                                                 2026.04.30更新
 *         メソッド             ：タスク削除（DELETE /tasks/:id）
-*         クエリパラメータ      ：ID（URLパラメータ）
-*         内容                 ：IDに該当するタスクを削除
-*         備考                 ：IDに該当するタスクが存在するか確認し、存在しない場合は404エラーを返す
+*         クエリパラメータ      ：URLパラメータ       ：id = タスクID
+*         内容                 ：指定したIDのタスクを削除する
+*         備考                 ：存在しないIDの場合は404エラーを返す
 *
 *******************************************************************************/
+exports.deleteTask = async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (Number.isNaN(id))
+  {
+    return sendError(res, 'VALIDATION_ERROR', 'IDが不正です', 400);
+  }
+
+  try
+  {
+    // タスク削除処理を実行
+    await taskModel.deleteTaskById(id);
+    return res.json({ message: 'タスクを削除しました。' });
+  }
+  catch (err)
+  {
+    // ★IDに該当するタスクが存在しない場合は404エラーを返す
+    if (err.code === 'NOT_FOUND')
+    {
+      return sendError(res, 'NOT_FOUND', 'タスクが見つかりません', 404);
+    }
+
+    // その他のエラーはDBエラーとして500エラーを返す
+    return sendError(res, 'DB_ERROR', 'タスクの削除に失敗しました', 500);
+  }
+};
+
+/*  一段階目SQliteでの処理
 exports.deleteTask = (req, res) => {
   const id = parseInt(req.params.id, 10);
   if (Number.isNaN(id)) {
@@ -287,4 +320,4 @@ exports.deleteTask = (req, res) => {
     }
     return res.json({ message: 'Task deleted successfully' });
   });
-};
+};*/
