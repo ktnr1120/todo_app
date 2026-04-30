@@ -26,62 +26,6 @@ function sendError(res, code, message, status = 400) {
 }
 
 
-/* タスク一覧取得（GET /tasks）
-// クエリパラメータ: page, keyword, status
-// ページング、キーワード検索、ステータスフィルタに対応
-exports.getTasks = (req, res) => {
-  // クエリパラメータからページ番号を取得（デフォルト1ページ目）
-  const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
-  const perPage = DEFAULT_PER_PAGE;
-  const { keyword, status } = req.query;
-  const offset = (page - 1) * perPage;
-
-  // WHERE句の条件とパラメータを動的に構築
-  const conditions = [];
-  const params = [];
-
-  // キーワード検索（タイトルに含まれる場合）
-  if (keyword) {
-    conditions.push('title LIKE ?');
-    params.push(`%${keyword}%`);
-  }
-
-  // ステータスフィルタ(バリデーションも実施)
-  if (status) {
-    if (!VALID_STATUSES.includes(status)) {
-      return sendError(res, 'VALIDATION_ERROR', 'statusの値が不正です', 400);
-    }
-    conditions.push('status = ?');
-    params.push(status);
-  }
-
-  const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
-
-  // ★総件数を取得
-  taskModel.countTasks(whereClause, params, (countErr, countRow) => {
-    if (countErr) {
-      return sendError(res, 'DB_ERROR', 'タスクの取得に失敗しました', 500);
-    }
-
-    const total = countRow.count;
-
-    // ★タスク一覧を取得（ページング適用）
-    taskModel.findTasks(whereClause, params, perPage, offset, (listErr, tasks) => {
-      if (listErr) {
-        return sendError(res, 'DB_ERROR', 'タスク一覧の取得に失敗しました', 500);
-      }
-
-      return res.json({
-        page,
-        per_page: perPage,
-        total,
-        tasks,
-      });
-    });
-  });
-};
-*/
-
 /*******************************************************************************
 *
 *   メソッド名         ：タスク一覧取得（GET /tasks）
@@ -139,6 +83,7 @@ exports.getTasks = async (req, res) => {
 *   URLパラメータ      ：id = タスクID
 *   処理概要           ：指定したIDに該当するタスク詳細を取得する
 *   備考               ：該当データが存在しない場合は404エラーを返す
+*   作成日             ：2026.04.30
 *
 *******************************************************************************/
 exports.getTaskById = async (req, res) => {
@@ -270,11 +215,12 @@ exports.updateTask = (req, res) => {
 
 
 /*******************************************************************************
-*                                                                 2026.04.30更新
+*
 *         メソッド             ：タスク削除（DELETE /tasks/:id）
 *         クエリパラメータ      ：URLパラメータ       ：id = タスクID
 *         内容                 ：指定したIDのタスクを削除する
 *         備考                 ：存在しないIDの場合は404エラーを返す
+*         作成日               ：2026.04.30
 *
 *******************************************************************************/
 exports.deleteTask = async (req, res) => {
