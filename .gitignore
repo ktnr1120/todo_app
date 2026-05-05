@@ -103,4 +103,7 @@ sessions/
 build/
 dist/
 
+# Study materials (local only)
+docs/async-await-promise-summary.md
+
 work/

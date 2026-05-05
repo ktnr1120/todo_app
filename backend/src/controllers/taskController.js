@@ -1,12 +1,19 @@
-﻿const db = require('../db');
+﻿/*******************************************
+*
+*   ファイル名     ：taskController.js
+*   概要           ：リクエスト／レスポンス制御
+*
+*********************************************/
 
-// TODO: ログイン機能追加 - 認証チェック用ミドルウェアインポート
-// const authMiddleware = require('../middleware/auth');
+const taskService = require('../services/taskService');
+const taskModel = require('../models/taskModel');
+const db = require('../config/db');
 
 // 有効なステータス値の定義
 const VALID_STATUSES = ['todo', 'doing', 'done'];
 // デフォルトの1ページあたりの表示件数
 const DEFAULT_PER_PAGE = 10;
+
 
 // ステータス値のバリデーション関数
 function validateStatus(status) {
@@ -18,118 +25,133 @@ function sendError(res, code, message, status = 400) {
   return res.status(status).json({ code, message, details: [] });
 }
 
-// タスク一覧取得（GET /tasks）
-// クエリパラメータ: page, keyword, status
-// ページング、キーワード検索、ステータスフィルタに対応
-exports.getTasks = (req, res) => {
-  // TODO: ログイン機能追加 - ユーザー固有のタスクのみ取得
-  // const userId = req.session.userId;
-  // conditions.push('user_id = ?');
-  // params.push(userId);
+
+/*******************************************************************************
+*
+*   メソッド名         ：タスク一覧取得（GET /tasks）
+*   クエリパラメータ   ：page    = 表示ページ番号
+*                        keyword = タイトル検索キーワード
+*                        status  = タスク状態(todo / doing / done)
+*   処理概要           ：条件に一致するタスク一覧をページングして取得する
+*   備考               ：ページング、キーワード検索、ステータス絞り込み対応
+*   作成日             ：2026.04.29
+*
+*******************************************************************************/
+exports.getTasks = async  (req, res) => {
   // クエリパラメータからページ番号を取得（デフォルト1ページ目）
   const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
   const perPage = DEFAULT_PER_PAGE;
   const { keyword, status } = req.query;
-  const offset = (page - 1) * perPage;
 
-  // WHERE句の条件とパラメータを動的に構築
-  const conditions = [];
-  const params = [];
-
-  // キーワード検索（タイトルに含まれる場合）
-  if (keyword) {
-    conditions.push('title LIKE ?');
-    params.push(`%${keyword}%`);
+  // ステータスフィルタ(バリデーションも実施)
+  if (status && !VALID_STATUSES.includes(status)) {
+    return sendError(res, 'VALIDATION_ERROR', 'statusの値が不正です', 400);
   }
 
-  // ステータスフィルタ
-  if (status) {
-    if (!VALID_STATUSES.includes(status)) {
-      return sendError(res, 'VALIDATION_ERROR', 'statusの値が不正です', 400);
-    }
-    conditions.push('status = ?');
-    params.push(status);
+  // ★総件数を取得
+  try {
+    // Modelの関数を呼び出してタスク一覧を取得
+    const result = await taskModel.getTasksList({
+      page,
+      perPage,
+      keyword,
+      status
+    });
+
+    return res.json(result);
+
+  } catch (Err) {
+    return sendError(res, 'DB_ERROR', 'タスクの取得に失敗しました', 500);
   }
-
-  const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
-
-  // 総件数を取得
-  db.get(`SELECT COUNT(*) AS count FROM tasks ${whereClause}`, params, (countErr, row) => {
-    if (countErr) {
-      return sendError(res, 'DB_ERROR', 'タスクの取得に失敗しました', 500);
-    }
-
-    const total = row.count;
-    // タスク一覧を取得（ページング適用）
-    db.all(
-      `SELECT id, title, status FROM tasks ${whereClause} ORDER BY id DESC LIMIT ? OFFSET ?`,
-      [...params, perPage, offset],
-      (listErr, tasks) => {
-        if (listErr) {
-          return sendError(res, 'DB_ERROR', 'タスク一覧の取得に失敗しました', 500);
-        }
-
-        return res.json({
-          page,
-          per_page: perPage,
-          total,
-          tasks,
-        });
-      }
-    );
-  });
 };
 
-exports.getTaskById = (req, res) => {
+/*2026.04.18新規
+exports.getTasks = async (req, res) => {
+  try {
+    const result = await taskService.getTasks(req.query);
+    res.json(result);
+  } catch (err) {
+    res.status(400).json({ message: err.message});
+  }
+};
+*/
+
+
+/*******************************************************************************
+*
+*   メソッド名         ：タスク詳細取得（GET /tasks/:id）
+*   URLパラメータ      ：id = タスクID
+*   処理概要           ：指定したIDに該当するタスク詳細を取得する
+*   備考               ：該当データが存在しない場合は404エラーを返す
+*   作成日             ：2026.04.30
+*
+*******************************************************************************/
+exports.getTaskById = async (req, res) => {
   const id = parseInt(req.params.id, 10);
+  // バリデーション
   if (Number.isNaN(id)) {
     return sendError(res, 'VALIDATION_ERROR', 'IDが不正です', 400);
   }
 
-  db.get('SELECT * FROM tasks WHERE id = ?', [id], (err, task) => {
-    if (err) {
-      return sendError(res, 'DB_ERROR', 'タスクの取得に失敗しました', 500);
-    }
-    if (!task) {
+  try {
+    const result = await taskModel.getTaskById(id);
+    return res.json(result);
+
+  } catch {
+    // ★IDに該当するタスクが存在しない場合は404エラーを返す
+    if (err.code === 'NOT_FOUND')
+    {
       return sendError(res, 'NOT_FOUND', 'タスクが見つかりません', 404);
     }
-
-    return res.json(task);
-  });
+    // その他のエラーはDBエラーとして500エラーを返す
+    return sendError(res, 'DB_ERROR', 'タスクの削除に失敗しました', 500);
+  }
 };
 
-exports.createTask = (req, res) => {
+
+/*******************************************************************************
+*
+*   メソッド名         ：タスク作成（POST /tasks）
+*   リクエストボディ   ：title  = タスクタイトル（必須）
+*                        status = タスク状態（任意、未指定時todo）
+*   処理概要           ：タイトルとステータスを受け取り、新しいタスクを作成する
+*   備考               ：入力バリデーションを実施する
+*   作成日             ：2026.05.06
+*
+*******************************************************************************/
+exports.createTask = async (req, res) => {
   const { title, status = 'todo' } = req.body;
 
+  // タイトルが空白
   if (!title || typeof title !== 'string') {
     return sendError(res, 'VALIDATION_ERROR', 'タイトルは必須です', 400);
   }
+  // タイトルが100文字オーバー
   if (title.length > 100) {
     return sendError(res, 'VALIDATION_ERROR', 'タイトルは100文字以内で入力してください', 400);
   }
+  // ステータスが不正
   if (!validateStatus(status)) {
     return sendError(res, 'VALIDATION_ERROR', 'statusの値が不正です', 400);
   }
 
-  const query = 'INSERT INTO tasks (title, status) VALUES (?, ?)';
-  // TODO: ログイン機能追加 - user_id追加
-  // const userId = req.session.userId;
-  // const query = 'INSERT INTO tasks (title, status, user_id) VALUES (?, ?, ?)';
-  // db.run(query, [title, status, userId], function (err) {
-    if (err) {
+  try {
+    const result = await taskModel.insertTask(title, status);
+    return res.status(201).json(result);
+  } catch(err) {
       return sendError(res, 'DB_ERROR', 'タスクの作成に失敗しました', 500);
-    }
-
-    const newTaskId = this.lastID;
-    db.get('SELECT * FROM tasks WHERE id = ?', [newTaskId], (getErr, task) => {
-      if (getErr) {
-        return sendError(res, 'DB_ERROR', '作成したタスクの取得に失敗しました', 500);
-      }
-      return res.status(201).json(task);
-    });
-  });
+  }
 };
 
+
+/*******************************************************************************
+*                                                                 2026.04.xx追加
+*         メソッド             ：タスク更新（PUT /tasks/:id）
+*         クエリパラメータ      ：ID（URLパラメータ）
+*         内容                 ：タイトルとステータスの両方、またはいずれかを更新可能
+*         備考                 ：入力バリデーションも実施
+*
+*******************************************************************************/
 exports.updateTask = (req, res) => {
   const id = parseInt(req.params.id, 10);
   const { title, status } = req.body;
@@ -147,6 +169,7 @@ exports.updateTask = (req, res) => {
     return sendError(res, 'VALIDATION_ERROR', 'statusの値が不正です', 400);
   }
 
+  // ★IDに該当するタスクが存在するか確認
   db.get('SELECT * FROM tasks WHERE id = ?', [id], (findErr, task) => {
     if (findErr) {
       return sendError(res, 'DB_ERROR', 'タスクの取得に失敗しました', 500);
@@ -154,11 +177,6 @@ exports.updateTask = (req, res) => {
     if (!task) {
       return sendError(res, 'NOT_FOUND', 'タスクが見つかりません', 404);
     }
-
-    // TODO: ログイン機能追加 - 所有者チェック
-    // if (task.user_id !== req.session.userId) {
-    //   return sendError(res, 'FORBIDDEN', 'アクセス権限がありません', 403);
-    // }
 
     const updates = [];
     const params = [];
@@ -180,6 +198,7 @@ exports.updateTask = (req, res) => {
     params.push(id);
 
     const updateQuery = `UPDATE tasks SET ${updates.join(', ')}, updated_at = ? WHERE id = ?`;
+    // ★タスクを更新
     db.run(updateQuery, params, (updateErr) => {
       if (updateErr) {
         return sendError(res, 'DB_ERROR', 'タスクの更新に失敗しました', 500);
@@ -189,20 +208,50 @@ exports.updateTask = (req, res) => {
   });
 };
 
+
+/*******************************************************************************
+*
+*         メソッド             ：タスク削除（DELETE /tasks/:id）
+*         クエリパラメータ      ：URLパラメータ       ：id = タスクID
+*         内容                 ：指定したIDのタスクを削除する
+*         備考                 ：存在しないIDの場合は404エラーを返す
+*         作成日               ：2026.04.30
+*
+*******************************************************************************/
+exports.deleteTask = async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (Number.isNaN(id))
+  {
+    return sendError(res, 'VALIDATION_ERROR', 'IDが不正です', 400);
+  }
+
+  try
+  {
+    // タスク削除処理を実行
+    await taskModel.deleteTaskById(id);
+    return res.json({ message: 'タスクを削除しました。' });
+  }
+  catch (err)
+  {
+    // ★IDに該当するタスクが存在しない場合は404エラーを返す
+    if (err.code === 'NOT_FOUND')
+    {
+      return sendError(res, 'NOT_FOUND', 'タスクが見つかりません', 404);
+    }
+
+    // その他のエラーはDBエラーとして500エラーを返す
+    return sendError(res, 'DB_ERROR', 'タスクの削除に失敗しました', 500);
+  }
+};
+
+/*  一段階目SQliteでの処理
 exports.deleteTask = (req, res) => {
   const id = parseInt(req.params.id, 10);
   if (Number.isNaN(id)) {
     return sendError(res, 'VALIDATION_ERROR', 'IDが不正です', 400);
   }
 
-  // TODO: ログイン機能追加 - 所有者チェック
-  // db.get('SELECT user_id FROM tasks WHERE id = ?', [id], (findErr, task) => {
-  //   if (findErr) return sendError(res, 'DB_ERROR', 'タスクの取得に失敗しました', 500);
-  //   if (!task) return sendError(res, 'NOT_FOUND', 'タスクが見つかりません', 404);
-  //   if (task.user_id !== req.session.userId) {
-  //     return sendError(res, 'FORBIDDEN', 'アクセス権限がありません', 403);
-  //   }
-
+  // ★IDに該当するタスクが存在するか確認
   db.run('DELETE FROM tasks WHERE id = ?', [id], function (err) {
     if (err) {
       return sendError(res, 'DB_ERROR', 'タスクの削除に失敗しました', 500);
@@ -212,6 +261,4 @@ exports.deleteTask = (req, res) => {
     }
     return res.json({ message: 'Task deleted successfully' });
   });
-  // TODO: ログイン機能追加 - 所有者チェック後の削除処理
-  // });
-};
+};*/
