@@ -116,20 +116,40 @@ exports.getTaskById = async (id) => {
 
 
 /*******************************************************************************
-*                                                                 2026.04.xx追加
-*         メソッド             ：タスク作成（POST /tasks）
-*         クエリパラメータ      ： title, status
-*         内容                 ：タイトルとステータスを受け取り、新しいタスクを作成
-*         備考                 ：入力バリデーションも実施
+*
+*   メソッド名         ：タスク作成（POST /tasks）
+*   リクエストボディ   ：title  = タスクタイトル
+*                        status = タスク状態
+*   処理概要           ：新しいタスクを作成し、作成したデータを返す
 *
 *******************************************************************************/
-async function insertTask(title) {
-    // sqlにSQLクエリを設定
-    const sql = 'INSERT INTO tasks (title) VALUES (?)';
-    // 配列resultに引数titleをsqlで実行した結果を格納
-    const [result] = await db.execute(sql, [title]);
-    return result;
-}
+exports.insertTask = async (title, status) => {
+
+    try {
+        // INSERTの実行
+        const [result] = await db.query(
+            'INSERT INTO tasks (title, status) VALUES (?, ?)',
+            [title, status]
+        );
+
+        // INSERTしたIDを取得
+        const newId = result.insertId;
+
+        // INSERT結果をSELECT
+        const [rows] = await db.query(
+            'SELECT id, title, status, created_at, updated_at FROM tasks WHERE id = ?', 
+            [newId]
+        );
+
+        // SELECT結果を返却
+        return rows[0];
+
+    } catch(err) {
+        // DB処理エラーはcontroller側でハンドリングするため再送出
+        throw err;
+    }
+};
+
 
 /*******************************************************************************
 *                                                                 2026.04.xx追加

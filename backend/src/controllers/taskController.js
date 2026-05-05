@@ -110,42 +110,37 @@ exports.getTaskById = async (req, res) => {
 
 
 /*******************************************************************************
-*                                                                 2026.04.xx追加
-*         メソッド             ：タスク作成（POST /tasks）
-*         クエリパラメータ      ：タイトルは必須、ステータスは任意（デフォルトは'todo'）
-*         内容                 ：タイトルとステータスを受け取り、新しいタスクを作成
-*         備考                 ：入力バリデーションも実施
+*
+*   メソッド名         ：タスク作成（POST /tasks）
+*   リクエストボディ   ：title  = タスクタイトル（必須）
+*                        status = タスク状態（任意、未指定時todo）
+*   処理概要           ：タイトルとステータスを受け取り、新しいタスクを作成する
+*   備考               ：入力バリデーションを実施する
+*   作成日             ：2026.05.06
 *
 *******************************************************************************/
-exports.createTask = (req, res) => {
+exports.createTask = async (req, res) => {
   const { title, status = 'todo' } = req.body;
 
+  // タイトルが空白
   if (!title || typeof title !== 'string') {
     return sendError(res, 'VALIDATION_ERROR', 'タイトルは必須です', 400);
   }
+  // タイトルが100文字オーバー
   if (title.length > 100) {
     return sendError(res, 'VALIDATION_ERROR', 'タイトルは100文字以内で入力してください', 400);
   }
+  // ステータスが不正
   if (!validateStatus(status)) {
     return sendError(res, 'VALIDATION_ERROR', 'statusの値が不正です', 400);
   }
 
-  const query = 'INSERT INTO tasks (title, status) VALUES (?, ?)';
-  // ★新しいタスクを挿入
-  db.run(query, [title, status], function (err) {
-    if (err) {
+  try {
+    const result = await taskModel.insertTask(title, status);
+    return res.status(201).json(result);
+  } catch(err) {
       return sendError(res, 'DB_ERROR', 'タスクの作成に失敗しました', 500);
-    }
-
-    const newTaskId = this.lastID;
-    // ★作成したタスクの詳細を取得してレスポンスに返す
-    db.get('SELECT * FROM tasks WHERE id = ?', [newTaskId], (getErr, task) => {
-      if (getErr) {
-        return sendError(res, 'DB_ERROR', '作成したタスクの取得に失敗しました', 500);
-      }
-      return res.status(201).json(task);
-    });
-  });
+  }
 };
 
 
