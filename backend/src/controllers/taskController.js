@@ -116,7 +116,7 @@ exports.getTaskById = async (req, res) => {
 *                        status = タスク状態（任意、未指定時todo）
 *   処理概要           ：タイトルとステータスを受け取り、新しいタスクを作成する
 *   備考               ：入力バリデーションを実施する
-*   作成日             ：2026.05.06
+*   作成日             ：2026.04.30
 *
 *******************************************************************************/
 exports.createTask = async (req, res) => {
@@ -145,31 +145,62 @@ exports.createTask = async (req, res) => {
 
 
 /*******************************************************************************
-*                                                                 2026.04.xx追加
-*         メソッド             ：タスク更新（PUT /tasks/:id）
-*         クエリパラメータ      ：ID（URLパラメータ）
-*         内容                 ：タイトルとステータスの両方、またはいずれかを更新可能
-*         備考                 ：入力バリデーションも実施
+*
+*   メソッド名         ：タスク更新（PUT /tasks/:id）
+*   URLパラメータ      ：id = タスクID
+*   リクエストボディ   ：title  = タスクタイトル（任意）
+*                        status = タスク状態（任意）
+*   処理概要           ：指定したタスクの情報を更新する
+*   備考               ：入力バリデーションを実施する
+*   作成日             ：2026.05.06
 *
 *******************************************************************************/
-exports.updateTask = (req, res) => {
+exports.updateTask = async (req, res) => {
   const id = parseInt(req.params.id, 10);
   const { title, status } = req.body;
 
+  // IDチェック
   if (Number.isNaN(id)) {
     return sendError(res, 'VALIDATION_ERROR', 'IDが不正です', 400);
   }
+  // 更新項目チェック
+  if (!title && !status){
+    return sendError(res, 'VALIDATION_ERROR', '更新する項目を指定してください', 400);
+  }
+  // タイトルチェック
   if (title && typeof title !== 'string') {
     return sendError(res, 'VALIDATION_ERROR', 'タイトルは文字列で指定してください', 400);
   }
+  // タイトル文字数チェック
   if (title && title.length > 100) {
     return sendError(res, 'VALIDATION_ERROR', 'タイトルは100文字以内で入力してください', 400);
   }
+  // ステータスチェック
   if (status && !validateStatus(status)) {
     return sendError(res, 'VALIDATION_ERROR', 'statusの値が不正です', 400);
   }
 
-  // ★IDに該当するタスクが存在するか確認
+  /*5.6追加*/
+  try {
+    // タスクの存在チェック（5.06に削除（DB2回アクセスするため））
+    // await taskModel.getTaskById(id);
+    // タスクの更新
+    const result = await taskModel.updateTaskById(id,title,status);
+
+    return res.json(result);
+
+  } catch(err) {
+    // ★IDに該当するタスクが存在しない場合は404エラーを返す
+    if (err.code === 'NOT_FOUND')
+    {
+      return sendError(res, 'NOT_FOUND', 'タスクが見つかりません', 404);
+    }
+    // その他のエラーはDBエラーとして500エラーを返す
+    return sendError(res, 'DB_ERROR', 'タスクの更新に失敗しました', 500);
+  }
+};
+// 変更前
+  /*/ ★IDに該当するタスクが存在するか確認
   db.get('SELECT * FROM tasks WHERE id = ?', [id], (findErr, task) => {
     if (findErr) {
       return sendError(res, 'DB_ERROR', 'タスクの取得に失敗しました', 500);
@@ -206,7 +237,7 @@ exports.updateTask = (req, res) => {
       return res.json({ message: 'Task updated successfully' });
     });
   });
-};
+};*/
 
 
 /*******************************************************************************

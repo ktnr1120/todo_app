@@ -105,7 +105,7 @@ exports.getTaskById = async (id) => {
         if (rows.length === 0) {
             throw ({ code: `NOT_FOUND` });
         }
-        // 取得したタスク一覧と総件数を返す
+        // 取得したタスクを返す
         return rows[0];
     }
     catch(err) {
@@ -121,6 +121,7 @@ exports.getTaskById = async (id) => {
 *   リクエストボディ   ：title  = タスクタイトル
 *                        status = タスク状態
 *   処理概要           ：新しいタスクを作成し、作成したデータを返す
+*   作成日             :2026.05.05
 *
 *******************************************************************************/
 exports.insertTask = async (title, status) => {
@@ -152,13 +153,60 @@ exports.insertTask = async (title, status) => {
 
 
 /*******************************************************************************
-*                                                                 2026.04.xx追加
-*         メソッド             ：タスク更新（PUT /tasks/:id）
-*         クエリパラメータ      ： title, status
-*         内容                 ：タイトルとステータスを受け取り、タスクを更新
-*         備考                 ：なし
+*
+*   メソッド名         ：タスク更新（PUT /tasks/:id）
+*   URLパラメータ      ：id = タスクID
+*   リクエストボディ   ：title  = タスクタイトル（任意）
+*                        status = タスク状態（任意）
+*   処理概要           ：指定したタスクを更新し、更新後データを返す
+*   作成日             ：2026.05.06
 *
 *******************************************************************************/
+exports.updateTaskById = async (id,title,status) => {
+    const updateTime = new Date();
+
+    // 動的にSET句を組み立て
+    const updates = [];
+    const params = [];
+
+    if (title !== undefined) {
+        updates.push('title = ?');
+        params.push(title);
+    }
+
+    if (status !== undefined) {
+        updates.push('status = ?');
+        params.push(status);
+    }
+
+    // updated_atは必ず更新
+    updates.push('updated_at = ?');
+    params.push(updateTime);
+
+    params.push(id);
+
+    try {
+        const [result] = await db.query(
+            `UPDATE tasks SET ${updates.join(', ')} WHERE id = ?`,
+            params
+        );
+
+        // 念のため存在しない場合にNOTFOUNDを返す
+        if(result.affectedRows === 0) {
+            throw { code: 'NOT_FOUND' };
+        }
+
+        // 更新後データ取得
+        const task = await getTaskById(id);
+
+        // 取得したタスクを返す
+        return task;
+
+    } catch(err) {
+        throw err;
+    }
+};
+
 
 
 /*******************************************************************************
