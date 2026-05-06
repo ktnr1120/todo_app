@@ -180,7 +180,6 @@ exports.updateTask = async (req, res) => {
     return sendError(res, 'VALIDATION_ERROR', 'statusの値が不正です', 400);
   }
 
-  /*5.6追加*/
   try {
     // タスクの存在チェック（5.06に削除（DB2回アクセスするため））
     // await taskModel.getTaskById(id);

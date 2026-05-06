@@ -11,7 +11,7 @@ const taskController = require('../controllers/taskController');
 
 // タスク一覧取得（GET /tasks）
 // クエリパラメータ: page, keyword, status
-// router.get('/', taskController.getTasks);
+router.get('/', taskController.getTasks);
 
 // タスク詳細取得（GET /tasks/:id）
 // パスパラメータ: id（タスクID）

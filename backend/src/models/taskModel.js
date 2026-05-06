@@ -6,7 +6,7 @@
 *********************************************/
 
 // DB接続プールをインポート
-const { jsx } = require('react/jsx-runtime');
+// const { jsx } = require('react/jsx-runtime');
 const db = require('../config/db');
 
 
