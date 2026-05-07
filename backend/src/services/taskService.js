@@ -17,7 +17,7 @@ async function getTasks(query) {
 
     if(keyword) {
         conditions.push('title LIKE ?');
-        params.oush(`%${keyword}%`);
+        params.push(`%${keyword}%`);
     }
 
     if(status) {
@@ -35,7 +35,7 @@ async function getTasks(query) {
     const offset = (page - 1) * perPage;
 
     const total = await taskModel.countTasks(whereClause, params);
-    const tassks = await taskModel.getTasks(whereClause, params, offset, perPage);
+    const tasks = await taskModel.getTasks(whereClause, params, offset, perPage);
 
     return { page, perPage, total, tasks };
 }

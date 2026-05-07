@@ -261,16 +261,21 @@ exports.deleteTask = async (req, res) => {
     await taskModel.deleteTaskById(id);
     return res.json({ message: 'タスクを削除しました。' });
   }
-  catch (err)
-  {
-    // ★IDに該当するタスクが存在しない場合は404エラーを返す
-    if (err.code === 'NOT_FOUND')
-    {
-      return sendError(res, 'NOT_FOUND', 'タスクが見つかりません', 404);
+  catch (err) {
+    if (err.code === 'NOT_FOUND') {
+        return sendError(
+            res,
+            'NOT_FOUND',
+            'タスクが見つかりません',
+            404
+        );
     }
-
-    // その他のエラーはDBエラーとして500エラーを返す
-    return sendError(res, 'DB_ERROR', 'タスクの削除に失敗しました', 500);
+    return sendError(
+        res,
+        'DB_ERROR',
+        'タスクの削除に失敗しました',
+        500
+    );
   }
 };
 

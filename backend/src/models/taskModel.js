@@ -43,7 +43,7 @@ exports.getTasksList = async ({ page, perPage, keyword, status }) => {
 
     try{
         // ★総件数を取得してからタスク一覧を取得する
-        const [countRows] = db.query(
+        const [countRows] = await db.query(
             `SELECT COUNT(*) AS count FROM tasks ${whereClause}`,
             params
         );
@@ -197,7 +197,7 @@ exports.updateTaskById = async (id,title,status) => {
         }
 
         // 更新後データ取得
-        const task = await getTaskById(id);
+        const task = await exports.getTaskById(id);
 
         // 取得したタスクを返す
         return task;
@@ -221,15 +221,19 @@ exports.updateTaskById = async (id,title,status) => {
 exports.deleteTaskById = async (id) => {
 
     try {
-        const result = await db.query(`DELETE FROM tasks WHERE id=?`, [id]);
-        // タスクIDがヒットしなかった場合
+        const [result] = await db.query(
+            'DELETE FROM tasks WHERE id = ?',
+            [id]
+        );
+
+        // 該当データなし
         if (result.affectedRows === 0) {
-            throw ({ code: `NOT_FOUND` });
+            throw { code: 'NOT_FOUND' };
         }
+
         return;
-    }
-    catch (err) {
-        // DBアクセス異常は呼び出し元へ送出
+
+    } catch (err) {
         throw err;
     }
 };

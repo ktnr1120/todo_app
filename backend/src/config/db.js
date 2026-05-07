@@ -9,13 +9,7 @@
 
 const mysql = require('mysql2/promise');
 
-// 接続エラー処理
-if (!process.env.DB_HOST || !process.env.DB_USER || !process.env.DB_NAME) {
-  console.error('DB環境変数が設定されていません。');
-  process.exit(1);
-}
-
-// MariaDB接続プール
+// 接続pool
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   port: process.env.DB_PORT,
@@ -31,11 +25,12 @@ const pool = mysql.createPool({
 (async () => {
   try {
     const connection = await pool.getConnection();
+
     console.log('DB接続成功');
-    connection/release();
-  }
-  catch (err)
-  {
+
+    connection.release();
+
+  } catch (err) {
     console.error('DB接続エラー', err);
     process.exit(1);
   }
