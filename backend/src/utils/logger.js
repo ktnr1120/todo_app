@@ -44,6 +44,11 @@ exports.info = (message) => {
     writeLog(`INFO`, message);
 };
 
+// WARNログ
+exports.warn = (message, data = null) => {
+    writeLog('WARN', message, data);
+};
+
 // ERRORログ
 exports.error = (message, err) => {
     writeLog('ERROR', message, err);

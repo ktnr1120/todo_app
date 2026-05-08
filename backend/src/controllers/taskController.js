@@ -46,6 +46,7 @@ exports.getTasks = async  (req, res) => {
 
   // ステータスフィルタ(バリデーションも実施)
   if (status && !VALID_STATUSES.includes(status)) {
+    logger.warn('[090]status不正', res);
     return sendError(res, 'VALIDATION_ERROR', 'statusの値が不正です', 400);
   }
 
@@ -58,6 +59,8 @@ exports.getTasks = async  (req, res) => {
       keyword,
       status
     });
+    
+    logger.info('[10]タスク一覧取得');
 
     return res.json(result);
 
@@ -92,11 +95,15 @@ exports.getTaskById = async (req, res) => {
   const id = parseInt(req.params.id, 10);
   // バリデーション
   if (Number.isNaN(id)) {
+    logger.warn('[190]ID不正', res);
     return sendError(res, 'VALIDATION_ERROR', 'IDが不正です', 400);
   }
 
   try {
     const result = await taskModel.getTaskById(id);
+
+    logger.info('[20]タスク詳細取得');
+
     return res.json(result);
 
   } catch(err) {
@@ -128,22 +135,30 @@ exports.createTask = async (req, res) => {
 
   // タイトルが空白
   if (!title || typeof title !== 'string') {
+    logger.warn('[370]タイトル未設定', res);
     return sendError(res, 'VALIDATION_ERROR', 'タイトルは必須です', 400);
   }
   // タイトルが100文字オーバー
   if (title.length > 100) {
+    logger.warn('[380]タイトル100文字オーバー', res);
     return sendError(res, 'VALIDATION_ERROR', 'タイトルは100文字以内で入力してください', 400);
   }
   // ステータスが不正
   if (!validateStatus(status)) {
+    logger.warn('[390]status不正', res);
     return sendError(res, 'VALIDATION_ERROR', 'statusの値が不正です', 400);
   }
 
   try {
     const result = await taskModel.insertTask(title, status);
+
+    logger.info('[30]タスク作成成功');
+
     return res.status(201).json(result);
   } catch(err) {
+
     logger.error('[300]タスク作成失敗', err);
+
     return sendError(res, 'DB_ERROR', 'タスクの作成に失敗しました', 500);
   }
 };
@@ -166,22 +181,27 @@ exports.updateTask = async (req, res) => {
 
   // IDチェック
   if (Number.isNaN(id)) {
+    logger.warn('[450]ID不正', res);
     return sendError(res, 'VALIDATION_ERROR', 'IDが不正です', 400);
   }
   // 更新項目チェック
   if (!title && !status){
+    logger.warn('[460]更新項目未設定', res);
     return sendError(res, 'VALIDATION_ERROR', '更新する項目を指定してください', 400);
   }
   // タイトルチェック
   if (title && typeof title !== 'string') {
+    logger.warn('[470]タイトル文字列不正', res);
     return sendError(res, 'VALIDATION_ERROR', 'タイトルは文字列で指定してください', 400);
   }
   // タイトル文字数チェック
   if (title && title.length > 100) {
+    logger.warn('[480]タイトル100文字オーバー', res);
     return sendError(res, 'VALIDATION_ERROR', 'タイトルは100文字以内で入力してください', 400);
   }
   // ステータスチェック
   if (status && !validateStatus(status)) {
+    logger.warn('[490]status不正', res);
     return sendError(res, 'VALIDATION_ERROR', 'statusの値が不正です', 400);
   }
 
@@ -190,6 +210,8 @@ exports.updateTask = async (req, res) => {
     // await taskModel.getTaskById(id);
     // タスクの更新
     const result = await taskModel.updateTaskById(id,title,status);
+
+    logger.info('[40]タスク更新成功');
 
     return res.json(result);
 
@@ -200,6 +222,7 @@ exports.updateTask = async (req, res) => {
       logger.error('[400]NOT_FOUND', err);
       return sendError(res, 'NOT_FOUND', 'タスクが見つかりません', 404);
     }
+
     logger.error('[500]タスク更新失敗', err);
     // その他のエラーはDBエラーとして500エラーを返す
     return sendError(res, 'DB_ERROR', 'タスクの更新に失敗しました', 500);
@@ -220,6 +243,7 @@ exports.deleteTask = async (req, res) => {
   const id = parseInt(req.params.id, 10);
   if (Number.isNaN(id))
   {
+    logger.warn('[550]]ID不正', res);
     return sendError(res, 'VALIDATION_ERROR', 'IDが不正です', 400);
   }
 
@@ -227,6 +251,9 @@ exports.deleteTask = async (req, res) => {
   {
     // タスク削除処理を実行
     await taskModel.deleteTaskById(id);
+
+    logger.info('[50]タスク削除成功');
+
     return res.json({ message: 'タスクを削除しました。' });
   }
   catch (err) {
