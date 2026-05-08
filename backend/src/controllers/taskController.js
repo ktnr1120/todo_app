@@ -279,21 +279,3 @@ exports.deleteTask = async (req, res) => {
   }
 };
 
-/*  一段階目SQliteでの処理
-exports.deleteTask = (req, res) => {
-  const id = parseInt(req.params.id, 10);
-  if (Number.isNaN(id)) {
-    return sendError(res, 'VALIDATION_ERROR', 'IDが不正です', 400);
-  }
-
-  // ★IDに該当するタスクが存在するか確認
-  db.run('DELETE FROM tasks WHERE id = ?', [id], function (err) {
-    if (err) {
-      return sendError(res, 'DB_ERROR', 'タスクの削除に失敗しました', 500);
-    }
-    if (this.changes === 0) {
-      return sendError(res, 'NOT_FOUND', 'タスクが見つかりません', 404);
-    }
-    return res.json({ message: 'Task deleted successfully' });
-  });
-};*/

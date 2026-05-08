@@ -237,12 +237,3 @@ exports.deleteTaskById = async (id) => {
         throw err;
     }
 };
-
-/*
-module.exports = {
-    getTasksList,
-    countTasks,
-    findTasks,
-    insertTask,
-    deleteTaskById
-};*/
