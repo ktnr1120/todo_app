@@ -8,6 +8,7 @@
 const taskService = require('../services/taskService');
 const taskModel = require('../models/taskModel');
 const db = require('../config/db');
+const logger = require('../utils/logger');
 
 // 有効なステータス値の定義
 const VALID_STATUSES = ['todo', 'doing', 'done'];
@@ -60,7 +61,8 @@ exports.getTasks = async  (req, res) => {
 
     return res.json(result);
 
-  } catch (Err) {
+  } catch (err) {
+    logger.error('[100]タスク取得失敗', err);
     return sendError(res, 'DB_ERROR', 'タスクの取得に失敗しました', 500);
   }
 };
@@ -97,12 +99,14 @@ exports.getTaskById = async (req, res) => {
     const result = await taskModel.getTaskById(id);
     return res.json(result);
 
-  } catch {
+  } catch(err) {
     // ★IDに該当するタスクが存在しない場合は404エラーを返す
     if (err.code === 'NOT_FOUND')
     {
+      logger.error('[200]NOT_FOUND', err);
       return sendError(res, 'NOT_FOUND', 'タスクが見つかりません', 404);
     }
+    logger.error('[300]タスク削除失敗', err);
     // その他のエラーはDBエラーとして500エラーを返す
     return sendError(res, 'DB_ERROR', 'タスクの削除に失敗しました', 500);
   }
@@ -139,7 +143,8 @@ exports.createTask = async (req, res) => {
     const result = await taskModel.insertTask(title, status);
     return res.status(201).json(result);
   } catch(err) {
-      return sendError(res, 'DB_ERROR', 'タスクの作成に失敗しました', 500);
+    logger.error('[300]タスク作成失敗', err);
+    return sendError(res, 'DB_ERROR', 'タスクの作成に失敗しました', 500);
   }
 };
 
@@ -192,51 +197,14 @@ exports.updateTask = async (req, res) => {
     // ★IDに該当するタスクが存在しない場合は404エラーを返す
     if (err.code === 'NOT_FOUND')
     {
+      logger.error('[400]NOT_FOUND', err);
       return sendError(res, 'NOT_FOUND', 'タスクが見つかりません', 404);
     }
+    logger.error('[500]タスク更新失敗', err);
     // その他のエラーはDBエラーとして500エラーを返す
     return sendError(res, 'DB_ERROR', 'タスクの更新に失敗しました', 500);
   }
 };
-// 変更前
-  /*/ ★IDに該当するタスクが存在するか確認
-  db.get('SELECT * FROM tasks WHERE id = ?', [id], (findErr, task) => {
-    if (findErr) {
-      return sendError(res, 'DB_ERROR', 'タスクの取得に失敗しました', 500);
-    }
-    if (!task) {
-      return sendError(res, 'NOT_FOUND', 'タスクが見つかりません', 404);
-    }
-
-    const updates = [];
-    const params = [];
-
-    if (title) {
-      updates.push('title = ?');
-      params.push(title);
-    }
-    if (status) {
-      updates.push('status = ?');
-      params.push(status);
-    }
-
-    if (updates.length === 0) {
-      return sendError(res, 'VALIDATION_ERROR', '更新するフィールドを指定してください', 400);
-    }
-
-    params.push(new Date().toISOString());
-    params.push(id);
-
-    const updateQuery = `UPDATE tasks SET ${updates.join(', ')}, updated_at = ? WHERE id = ?`;
-    // ★タスクを更新
-    db.run(updateQuery, params, (updateErr) => {
-      if (updateErr) {
-        return sendError(res, 'DB_ERROR', 'タスクの更新に失敗しました', 500);
-      }
-      return res.json({ message: 'Task updated successfully' });
-    });
-  });
-};*/
 
 
 /*******************************************************************************
@@ -263,6 +231,7 @@ exports.deleteTask = async (req, res) => {
   }
   catch (err) {
     if (err.code === 'NOT_FOUND') {
+        logger.error('[600]NOT_FOUND', err);
         return sendError(
             res,
             'NOT_FOUND',
@@ -270,6 +239,7 @@ exports.deleteTask = async (req, res) => {
             404
         );
     }
+    logger.error('[700]タスク削除失敗', err);
     return sendError(
         res,
         'DB_ERROR',
