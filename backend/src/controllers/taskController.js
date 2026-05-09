@@ -46,7 +46,7 @@ exports.getTasks = async  (req, res) => {
 
   // ステータスフィルタ(バリデーションも実施)
   if (status && !VALID_STATUSES.includes(status)) {
-    logger.warn('[090]status不正', res);
+    logger.warn('[090]status不正', { body: req.body });
     return sendError(res, 'VALIDATION_ERROR', 'statusの値が不正です', 400);
   }
 
@@ -70,18 +70,6 @@ exports.getTasks = async  (req, res) => {
   }
 };
 
-/*2026.04.18新規
-exports.getTasks = async (req, res) => {
-  try {
-    const result = await taskService.getTasks(req.query);
-    res.json(result);
-  } catch (err) {
-    res.status(400).json({ message: err.message});
-  }
-};
-*/
-
-
 /*******************************************************************************
 *
 *   メソッド名         ：タスク詳細取得（GET /tasks/:id）
@@ -95,7 +83,7 @@ exports.getTaskById = async (req, res) => {
   const id = parseInt(req.params.id, 10);
   // バリデーション
   if (Number.isNaN(id)) {
-    logger.warn('[190]ID不正', res);
+    logger.warn('[190]ID不正', { body: req.body });
     return sendError(res, 'VALIDATION_ERROR', 'IDが不正です', 400);
   }
 
@@ -135,17 +123,17 @@ exports.createTask = async (req, res) => {
 
   // タイトルが空白
   if (!title || typeof title !== 'string') {
-    logger.warn('[370]タイトル未設定', res);
+    logger.warn('[370]タイトル未設定', { body: req.body });
     return sendError(res, 'VALIDATION_ERROR', 'タイトルは必須です', 400);
   }
   // タイトルが100文字オーバー
   if (title.length > 100) {
-    logger.warn('[380]タイトル100文字オーバー', res);
+    logger.warn('[380]タイトル100文字オーバー', { body: req.body });
     return sendError(res, 'VALIDATION_ERROR', 'タイトルは100文字以内で入力してください', 400);
   }
   // ステータスが不正
   if (!validateStatus(status)) {
-    logger.warn('[390]status不正', res);
+    logger.warn('[390]status不正', { body: req.body });
     return sendError(res, 'VALIDATION_ERROR', 'statusの値が不正です', 400);
   }
 
@@ -181,27 +169,27 @@ exports.updateTask = async (req, res) => {
 
   // IDチェック
   if (Number.isNaN(id)) {
-    logger.warn('[450]ID不正', res);
+    logger.warn('[450]ID不正', { body: req.body });
     return sendError(res, 'VALIDATION_ERROR', 'IDが不正です', 400);
   }
   // 更新項目チェック
   if (!title && !status){
-    logger.warn('[460]更新項目未設定', res);
+    logger.warn('[460]更新項目未設定', { body: req.body });
     return sendError(res, 'VALIDATION_ERROR', '更新する項目を指定してください', 400);
   }
   // タイトルチェック
   if (title && typeof title !== 'string') {
-    logger.warn('[470]タイトル文字列不正', res);
+    logger.warn('[470]タイトル文字列不正', { body: req.body });
     return sendError(res, 'VALIDATION_ERROR', 'タイトルは文字列で指定してください', 400);
   }
   // タイトル文字数チェック
   if (title && title.length > 100) {
-    logger.warn('[480]タイトル100文字オーバー', res);
+    logger.warn('[480]タイトル100文字オーバー', { body: req.body });
     return sendError(res, 'VALIDATION_ERROR', 'タイトルは100文字以内で入力してください', 400);
   }
   // ステータスチェック
   if (status && !validateStatus(status)) {
-    logger.warn('[490]status不正', res);
+    logger.warn('[490]status不正', { body: req.body });
     return sendError(res, 'VALIDATION_ERROR', 'statusの値が不正です', 400);
   }
 
@@ -243,7 +231,7 @@ exports.deleteTask = async (req, res) => {
   const id = parseInt(req.params.id, 10);
   if (Number.isNaN(id))
   {
-    logger.warn('[550]]ID不正', res);
+    logger.warn('[550]]ID不正', { body: req.body });
     return sendError(res, 'VALIDATION_ERROR', 'IDが不正です', 400);
   }
 
