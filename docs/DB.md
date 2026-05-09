@@ -30,16 +30,16 @@
 
 ### カラム定義
 
-| カラム名       | 型           | 制約                                        | 説明                        |
-| -------------- | ------------ | ------------------------------------------- | --------------------------- |
-| id             | SERIAL       | PRIMARY KEY                                 | ユーザーID                  |
-| email          | VARCHAR(255) | UNIQUE, NOT NULL                            | メールアドレス              |
-| password_hash  | VARCHAR(255) | NOT NULL                                    | パスワードハッシュ (bcrypt) |
-| role           | VARCHAR(20)  | NOT NULL, CHECK (role IN ('user', 'admin')) | ロール                      |
-| locked_until   | TIMESTAMP    |                                             | アカウントロック解除時刻    |
-| login_attempts | INTEGER      | DEFAULT 0                                   | ログイン失敗回数            |
-| created_at     | TIMESTAMP    | DEFAULT CURRENT_TIMESTAMP                   | 作成日時                    |
-| updated_at     | TIMESTAMP    |                                             | 更新日時                    |
+| カラム名       | 型           | 制約                                                  | 説明                       |
+| -------------- | ------------ | ----------------------------------------------------- | -------------------------- |
+| id             | INT          | PRIMARY KEY, AUTO_INCREMENT                           | ユーザーID                 |
+| email          | VARCHAR(255) | UNIQUE, NOT NULL                                      | メールアドレス             |
+| password_hash  | VARCHAR(255) | NOT NULL                                              | パスワードハッシュ(bcrypt) |
+| role           | VARCHAR(20)  | NOT NULL, DEFAULT 'user'                              | ロール                     |
+| login_attempts | INT          | NOT NULL, DEFAULT 0                                   | ログイン失敗回数           |
+| locked_until   | TIMESTAMP    | NULL                                                  | アカウントロック解除時刻   |
+| created_at     | TIMESTAMP    | DEFAULT CURRENT_TIMESTAMP                             | 作成日時                   |
+| updated_at     | TIMESTAMP    | DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | 更新日時                   |
 
 ### CREATE文
 
@@ -53,6 +53,18 @@ CREATE TABLE users (
   login_attempts INTEGER DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP
+);
+
+CREATE TABLE users (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    role VARCHAR(20) NOT NULL DEFAULT 'user',
+    login_attempts INT NOT NULL DEFAULT 0,
+    locked_until TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP
 );
 ```
 
@@ -68,14 +80,14 @@ CREATE TABLE users (
 
 ### カラム定義
 
-| カラム名   | 型           | 制約                      | 説明       |
-| ---------- | ------------ | ------------------------- | ---------- |
-| id         | SERIAL       | PRIMARY KEY               | タスクID   |
-| user_id    | INTEGER      | NOT NULL, FOREIGN KEY     | ユーザーID |
-| title      | VARCHAR(100) | NOT NULL                  | タスク内容 |
-| status     | VARCHAR(20)  | NOT NULL, CHECK制約あり   | タスク状態 |
-| created_at | TIMESTAMP    | DEFAULT CURRENT_TIMESTAMP | 作成日時   |
-| updated_at | TIMESTAMP    |                           | 更新日時   |
+| カラム名   | 型           | 制約                                                  | 説明       |
+| ---------- | ------------ | ----------------------------------------------------- | ---------- |
+| id         | INT          | PRIMARY KEY, AUTO_INCREMENT                           | タスクID   |
+| user_id    | INT          | NOT NULL, FOREIGN KEY                                 | ユーザーID |
+| title      | VARCHAR(100) | NOT NULL                                              | タスク内容 |
+| status     | VARCHAR(20)  | NOT NULL                                              | タスク状態 |
+| created_at | TIMESTAMP    | DEFAULT CURRENT_TIMESTAMP                             | 作成日時   |
+| updated_at | TIMESTAMP    | DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | 更新日時   |
 
 ---
 
@@ -91,17 +103,20 @@ CREATE TABLE users (
 
 ### CREATE文
 
-```sql
+````sql
 CREATE TABLE tasks (
-  id SERIAL PRIMARY KEY,
-  user_id INTEGER NOT NULL REFERENCES users(id),
-  title VARCHAR(100) NOT NULL,
-  status VARCHAR(20) NOT NULL CHECK (status IN ('todo', 'doing', 'done')),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP
-);
-```
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    title VARCHAR(100) NOT NULL,
+    status VARCHAR(20) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
 
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);```
+
+/* 旧CREATE文（user_idなし） * /
 ## tasksテーブル
 
 ### 概要
@@ -142,4 +157,4 @@ CREATE TABLE tasks (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP
 );
-```
+````

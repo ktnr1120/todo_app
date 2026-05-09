@@ -30,9 +30,10 @@ app.get('/health', (req, res) => {
     res.json({ status: 'OK'});
 });
 
-// TODO: ログイン機能追加 - ログイン/ログアウトAPI追加
-// app.post('/login', ...);
-// app.post('/logout', ...);
+// ログインルートの追加
+const authRouter = require('./src/routes/auth');
+
+app.use('/auth', authRouter);
 
 module.exports = app;
 
