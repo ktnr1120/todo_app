@@ -90,6 +90,7 @@ exports.register = async (req,res) => {
 
     // メールアドレスの重複チェック
     const exists = await userModel.findByEmail(email);
+    // 戻り値がnullではない場合、重複のためエラーを返却
     if (exists) {
         return sendError(res, 'VALIDATION_ERROR', 'このメールアドレスはすでに登録されています', 409);
     }
