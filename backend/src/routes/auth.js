@@ -13,5 +13,14 @@ const taskController = require('../controllers/authController');
 // ユーザー登録
 router.post('/register', authController.register);
 
+// ログイン
+router.post('/login', authController.login);
+
+// ログアウト
+router.get('/logout', authController.logout);
+
+// リフレッシュトークン取得
+router.post('/refresh', authController.refresh);
+
 
 module.exports = router;
