@@ -14,6 +14,7 @@ const logger = require('../utils/logger');
 function sendError(res, code, message, status = 400) {
   return res.status(status).json({ code, message, details: [] });
 }
+
 /*******************************************************************************
 *
 *   メソッド名         ：ログイン（POST /auth/login）
@@ -24,10 +25,64 @@ function sendError(res, code, message, status = 400) {
 *   作成日             ：2026.05.xx
 *
 *******************************************************************************/
-email検索
-bcrypt.compare
-jwt.sign
-token返却
+exports.login = async (req,res) => {
+  const { email, password } = req.body;
+
+  // バリデーション※SQLインジェクション対策も兼ねる
+  // メールアドレスが空白
+  if (!email || typeof email !== 'string') {
+    logger.warn('[100]メールアドレス未設定');
+    return sendError(res, 'VALIDATION_ERROR', 'メールアドレスは必須です', 400);
+  }
+  // メールアドレス形式チェック
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    logger.warn('[120]メールアドレスの形式不正');
+    return sendError(res, 'VALIDATION_ERROR', 'メールアドレスの形式が不正です', 400);
+  }
+
+    // パスワードが空白
+  if (!password || typeof password !== 'string') {
+    // logにパスワードの内容が残らないようにする(以下はNG例)
+    // logger.warn('[200]パスワード未設定', { body: req.body });
+    logger.warn('[200]パスワード未設定');
+    return sendError(res, 'VALIDATION_ERROR', 'パスワードは必須です', 400);
+  }
+
+/* 
+controller側の処理概要
+（ログイン／パスワード）バリデーション
+token発行
+Model側で存在確認を実施。
+*/
+
+  try {   
+    // ログイン実行の実行
+    const result = await userModel.authenticate(email, password);
+
+    if(!result) {
+      logger.error('[300]ログイン失敗', result.error);
+      return sendError(res, 'AUTH_ERROR', 'メールアドレスまたはパスワードが正しくありません',401);
+    }
+
+    logger.info('[00]ログイン成功');
+
+    // JWTの発行
+    const token = JWT.sign(
+      { userId: result.id, email: result.email },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h'}
+    );
+
+    return res.status(200).json({ token });
+  } catch(err) {
+
+    logger.error('[300]ログイン失敗', err);
+
+    return sendError(res, 'DB_ERROR', 'ログインに失敗しました', 500);
+  }
+
+};
+
 
 /*******************************************************************************
 *
