@@ -76,6 +76,15 @@ Model側で存在確認を実施。
     return res.status(200).json({ token });
   } catch(err) {
 
+    if (err.code === 'AUTH_ERROR') {
+      return sendError(
+          res,
+          'AUTH_ERROR',
+          'メールアドレスまたはパスワードが正しくありません',
+          401
+        );
+    }
+
     logger.error('[300]ログイン失敗', err);
 
     return sendError(res, 'DB_ERROR', 'ログインに失敗しました', 500);

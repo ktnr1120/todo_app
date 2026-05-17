@@ -6,6 +6,7 @@
 *********************************************/
 
 const db = require('../config/db');
+const bcrypt = require('bcrypt');
 
 
 /*******************************************************************************
@@ -17,13 +18,43 @@ const db = require('../config/db');
 *   備考               ：パスワードはハッシュ化されているため、DBから取得した
 *                      ハッシュ化されたパスワードと、リクエストボディのパスワードを
 *                      bcrypt.compare()で比較する。
-*   作成日             :2026.05.10
+*   作成日             :2026.05.18
 *
 *******************************************************************************/
-email検索
-bcrypt.compare
-jwt.sign
-token返却
+exports.authenticate = async (email, password) => {
+
+    try {
+        // ユーザー検索
+        const [rows] = await db.query(
+            'SELECT id, email, password_hash, created_at, updated_at FROM users WHERE email = ?', 
+            [email]
+        );
+
+        // メースアドレスがヒットしなかった場合※セキュリティ上、どちらが原因か特定できないようにするため
+        if(rows.length === 0) {
+            // ユーザーが見つからない場合は
+            throw { code: 'AUTH_ERROR' };
+        }
+        const user = rows[0];
+
+
+        // パスワードの比較
+        const passwordMatch = await bcrypt.compare(password, user.password_hash);
+        if  (!passwordMatch) {
+            // パスワードが一致しない場合
+            throw { code: 'AUTH_ERROR' };
+        }
+        // hashを除外
+        delete user.password_hash;
+
+        // SELECT結果を返却
+        return user;
+
+    } catch(err) {
+        // DB処理エラーはcontroller側でハンドリングするため再送出
+        throw err;
+    }
+};
 
 
 /*******************************************************************************
