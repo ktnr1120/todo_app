@@ -99,33 +99,22 @@ Model側で存在確認を実施。
 *   リクエストボディ   ：なし
 *   処理概要           ：ログアウトを行う
 *   備考               ：セッションやトークンの無効化など、ログアウトに必要な処理実行
-*   作成日             ：2026.05.xx
+*   作成日             ：2026.05.20
 *
 *******************************************************************************/
-token blacklist
-refresh token削除
-Cookie削除
 exports.logout = async (req,res) => {
-  const { email, password } = req.body;
 
-  // バリデーション※SQLインジェクション対策も兼ねる
+  try {
 
+    logger.info('[00]ログアウト成功');
 
-  try {   
-    // ログイン実行の実行
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const jti = decoded.jti;
+    return res.status(200).json({ message: 'ログアウトしました' });
 
-    // トークンの残り有効期間を計算
-    const expiresIn = decoded.exp - Math.floor(Date.now() / 1000);
-
-    logger.info('[00]ログイン成功');
-
-    return res.status(200).json({ token });
   } catch(err) {
-    logger.error('[300]ログイン失敗', err);
 
-    return sendError(res, 'DB_ERROR', 'ログアウトに失敗しました', 500);
+    logger.error('[300]ログアウト失敗', err);
+
+    return sendError(res, 'LOGOUT_ERROR', 'ログアウトに失敗しました', 500);
   }
 };
 
