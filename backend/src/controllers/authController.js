@@ -9,6 +9,7 @@
 const bcrypt = require('bcrypt');
 const userModel = require('../models/userModel');
 const logger = require('../utils/logger');
+const JWT = require('jsonwebtoken');
 
 // エラーレスポンスを統一して送信する関数
 function sendError(res, code, message, status = 400) {
@@ -22,7 +23,7 @@ function sendError(res, code, message, status = 400) {
 *                      password = ユーザーのパスワード(登録用)
 *   処理概要           ：ユーザーの「認証を行う
 *   備考               ：ユーザー名とパスワードを受け取り、ユーザーの認証を行う。
-*   作成日             ：2026.05.xx
+*   作成日             ：2026.05.16
 *
 *******************************************************************************/
 exports.login = async (req,res) => {
@@ -130,6 +131,8 @@ exports.logout = async (req,res) => {
 *   作成日             ：2026.05.xx
 *
 *******************************************************************************/
+
+
 
 
 /*******************************************************************************

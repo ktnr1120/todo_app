@@ -8,7 +8,7 @@
 const express = require('express');
 const router = express.Router();
 
-const taskController = require('../controllers/authController');
+const authController = require('../controllers/authController');
 
 // ユーザー登録
 router.post('/register', authController.register);

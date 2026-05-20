@@ -66,9 +66,7 @@ exports.authenticate = async (email, password) => {
 *   作成日             :2026.05.10
 *
 *******************************************************************************/
-token blacklist
-refresh token削除
-Cookie削除
+
 
 /*******************************************************************************
 *
@@ -136,7 +134,7 @@ exports.findByEmail = async (email) => {
     try {
         // INSERT結果をSELECT
         const [rows] = await db.query(
-            'SELECT COUNT(*) AS countFROM users WHERE email = ?', 
+            'SELECT COUNT(*) AS count FROM users WHERE email = ?', 
             [email]
         );
 
