@@ -9,6 +9,29 @@ javascriptを使用して、フロントエンドとバックエンドの両方�
 フロントエンドはReactを使用。バックエンドはNode.jsを使用している。
 また、AIを使用しての開発で、実際にwebアプリの開発経験がない状態で、どこまで自走できるかを試した。
 
+## 起動手順
+
+### 1. バックエンドを起動
+
+1. `d:\todo_app\backend` に移動します。
+2. `npm install` を実行します。
+3. `.env` ファイルを作成し、以下を設定します。
+   - `DB_HOST`
+   - `DB_PORT`
+   - `DB_USER`
+   - `DB_PASSWORD`
+   - `DB_NAME`
+   - `JWT_SECRET`
+4. 初回起動時は `node database/migrate.js` を実行し、必要なテーブルを作成します。
+5. `npm start` でサーバーを起動します。
+
+### 2. フロントエンドを起動
+
+1. `d:\todo_app\frontend` に移動します。
+2. `npm install` を実行します。
+3. `npm run dev` を実行します。
+4. ブラウザで `http://localhost:5173` を開きます。
+
 ## 着地点
 
 3日目安でwebアプリの開発を完了させる。

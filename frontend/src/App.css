@@ -1,7 +1,7 @@
 /* TODO App スタイル */
 
 .app {
-  max-width: 800px;
+  max-width: 900px;
   margin: 0 auto;
   padding: 20px;
   font-family: Arial, sans-serif;
@@ -10,80 +10,121 @@
 h1 {
   text-align: center;
   color: #333;
+  margin-bottom: 24px;
 }
 
 .error {
   background-color: #ffebee;
   color: #c62828;
-  padding: 10px;
-  border-radius: 4px;
+  padding: 12px;
+  border-radius: 8px;
   margin-bottom: 20px;
   border: 1px solid #ffcdd2;
 }
 
-.task-form {
+.section {
+  max-width: 100%;
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.04);
+}
+
+.section-header {
   display: flex;
-  gap: 10px;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
   margin-bottom: 20px;
 }
 
-.task-form input {
+.logout-btn {
+  padding: 10px 18px;
+  background-color: #f05454;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.logout-btn:hover {
+  opacity: 0.9;
+}
+
+.task-form,
+.auth-form {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.task-form input,
+.auth-form input {
   flex: 1;
-  padding: 10px;
+  min-width: 240px;
+  padding: 12px;
   border: 1px solid #ddd;
-  border-radius: 4px;
+  border-radius: 8px;
   font-size: 16px;
 }
 
-.task-form button {
-  padding: 10px 20px;
+.task-form button,
+.auth-form button {
+  padding: 12px 20px;
   background-color: #4caf50;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 16px;
 }
 
-.task-form button:hover {
+.task-form button:hover,
+.auth-form button:hover {
   background-color: #45a049;
 }
 
 .filters {
   display: flex;
   gap: 10px;
+  flex-wrap: wrap;
   margin-bottom: 20px;
 }
 
 .filters select,
 .filters input {
-  padding: 8px;
+  padding: 10px;
   border: 1px solid #ddd;
-  border-radius: 4px;
+  border-radius: 8px;
   font-size: 14px;
+  min-width: 180px;
 }
 
 .task-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 14px;
 }
 
 .task-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  background-color: #f9f9f9;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  background-color: #fafafa;
 }
 
 .task-content {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 15px;
+  gap: 16px;
   flex: 1;
+  min-width: 0;
 }
 
 .task-content h3 {
@@ -92,17 +133,17 @@ h1 {
 }
 
 .task-content select {
-  padding: 5px;
+  padding: 10px;
   border: 1px solid #ddd;
-  border-radius: 4px;
+  border-radius: 8px;
 }
 
 .delete-btn {
-  padding: 8px 12px;
+  padding: 10px 14px;
   background-color: #f44336;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
 }
@@ -111,142 +152,65 @@ h1 {
   background-color: #d32f2f;
 }
 
+.auth-section {
+  max-width: 460px;
+  margin: 0 auto;
+}
+
+.auth-form {
+  display: grid;
+  gap: 16px;
+}
+
+.auth-form label {
+  display: grid;
+  gap: 8px;
+  font-size: 14px;
+  color: #333;
+}
+
+.auth-toggle {
+  text-align: center;
+  font-size: 14px;
+}
+
+.auth-toggle button {
+  margin-left: 8px;
+  background: none;
+  border: none;
+  color: #4a76ff;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.task-meta {
+  margin: 6px 0 0;
+  color: #666;
+  font-size: 13px;
+}
+
 .loading {
   text-align: center;
   padding: 20px;
   color: #666;
 }
-    top: 107px;
-    height: 26px;
-    width: auto;
-    transform: perspective(2000px) rotateZ(300deg) rotateX(40deg) rotateY(39deg)
-      scale(0.8);
-  }
-}
 
-#center {
-  display: flex;
-  flex-direction: column;
-  gap: 25px;
-  place-content: center;
-  place-items: center;
-  flex-grow: 1;
-
-  @media (max-width: 1024px) {
-    padding: 32px 20px 24px;
-    gap: 18px;
-  }
-}
-
-#next-steps {
-  display: flex;
-  border-top: 1px solid var(--border);
-  text-align: left;
-
-  & > div {
-    flex: 1 1 0;
-    padding: 32px;
-    @media (max-width: 1024px) {
-      padding: 24px 20px;
-    }
-  }
-
-  .icon {
-    margin-bottom: 16px;
-    width: 22px;
-    height: 22px;
-  }
-
-  @media (max-width: 1024px) {
+@media (max-width: 760px) {
+  .task-form,
+  .filters,
+  .auth-form {
     flex-direction: column;
-    text-align: center;
+  }
+
+  .task-item {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .task-content {
+    flex-direction: column;
+    align-items: stretch;
   }
 }
 
-#docs {
-  border-right: 1px solid var(--border);
-
-  @media (max-width: 1024px) {
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-  }
-}
-
-#next-steps ul {
-  list-style: none;
-  padding: 0;
-  display: flex;
-  gap: 8px;
-  margin: 32px 0 0;
-
-  .logo {
-    height: 18px;
-  }
-
-  a {
-    color: var(--text-h);
-    font-size: 16px;
-    border-radius: 6px;
-    background: var(--social-bg);
-    display: flex;
-    padding: 6px 12px;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none;
-    transition: box-shadow 0.3s;
-
-    &:hover {
-      box-shadow: var(--shadow);
-    }
-    .button-icon {
-      height: 18px;
-      width: 18px;
-    }
-  }
-
-  @media (max-width: 1024px) {
-    margin-top: 20px;
-    flex-wrap: wrap;
-    justify-content: center;
-
-    li {
-      flex: 1 1 calc(50% - 8px);
-    }
-
-    a {
-      width: 100%;
-      justify-content: center;
-      box-sizing: border-box;
-    }
-  }
-}
-
-#spacer {
-  height: 88px;
-  border-top: 1px solid var(--border);
-  @media (max-width: 1024px) {
-    height: 48px;
-  }
-}
-
-.ticks {
-  position: relative;
-  width: 100%;
-
-  &::before,
-  &::after {
-    content: '';
-    position: absolute;
-    top: -4.5px;
-    border: 5px solid transparent;
-  }
-
-  &::before {
-    left: 0;
-    border-left-color: var(--border);
-  }
-  &::after {
-    right: 0;
-    border-right-color: var(--border);
-  }
-}

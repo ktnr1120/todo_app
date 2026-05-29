@@ -7,13 +7,30 @@
 
 
 const bcrypt = require('bcrypt');
+const crypto = require('crypto');
+const JWT = require('jsonwebtoken');
 const userModel = require('../models/userModel');
 const logger = require('../utils/logger');
-const JWT = require('jsonwebtoken');
 
 // エラーレスポンスを統一して送信する関数
 function sendError(res, code, message, status = 400) {
   return res.status(status).json({ code, message, details: [] });
+}
+
+function generateAccessToken(user) {
+  return JWT.sign(
+    { userId: user.id, email: user.email },
+    process.env.JWT_SECRET,
+    { expiresIn: '1h' }
+  );
+}
+
+function generateRefreshToken() {
+  return crypto.randomBytes(64).toString('hex');
+}
+
+function getRefreshTokenExpiry() {
+  return new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 }
 
 /*******************************************************************************
@@ -68,13 +85,13 @@ Model側で存在確認を実施。
     logger.info('[00]ログイン成功');
 
     // JWTの発行
-    const token = JWT.sign(
-      { userId: result.id, email: result.email },
-      process.env.JWT_SECRET,
-      { expiresIn: '1h'}
-    );
+    const token = generateAccessToken(result);
+    const refreshToken = generateRefreshToken();
+    const refreshExpiresAt = getRefreshTokenExpiry();
 
-    return res.status(200).json({ token });
+    await userModel.insertRefreshToken(result.id, refreshToken, refreshExpiresAt);
+
+    return res.status(200).json({ token, refreshToken });
   } catch(err) {
 
     if (err.code === 'AUTH_ERROR') {
@@ -104,8 +121,12 @@ Model側で存在確認を実施。
 *
 *******************************************************************************/
 exports.logout = async (req,res) => {
+  const { refreshToken } = req.body || {};
 
   try {
+    if (refreshToken) {
+      await userModel.revokeRefreshToken(refreshToken);
+    }
 
     logger.info('[00]ログアウト成功');
 
@@ -119,7 +140,42 @@ exports.logout = async (req,res) => {
   }
 };
 
+exports.refresh = async (req, res) => {
+  const { refreshToken } = req.body || {};
 
+  if (!refreshToken || typeof refreshToken !== 'string') {
+    return sendError(res, 'VALIDATION_ERROR', 'リフレッシュトークンは必須です', 400);
+  }
+
+  try {
+    const storedToken = await userModel.findRefreshToken(refreshToken);
+
+    if (!storedToken || storedToken.revoked) {
+      throw { code: 'AUTH_ERROR' };
+    }
+
+    if (new Date(storedToken.expires_at) < new Date()) {
+      throw { code: 'AUTH_ERROR' };
+    }
+
+    const user = { id: storedToken.user_id, email: storedToken.email };
+    const token = generateAccessToken(user);
+    const nextRefreshToken = generateRefreshToken();
+    const refreshExpiresAt = getRefreshTokenExpiry();
+
+    await userModel.revokeRefreshToken(refreshToken);
+    await userModel.insertRefreshToken(user.id, nextRefreshToken, refreshExpiresAt);
+
+    return res.status(200).json({ token, refreshToken: nextRefreshToken });
+  } catch (err) {
+    if (err.code === 'AUTH_ERROR') {
+      return sendError(res, 'AUTH_ERROR', 'リフレッシュトークンが無効です', 401);
+    }
+
+    logger.error('[300]refresh token 失敗', err);
+    return sendError(res, 'DB_ERROR', 'リフレッシュトークンの更新に失敗しました', 500);
+  }
+};
 
 /*******************************************************************************
 *

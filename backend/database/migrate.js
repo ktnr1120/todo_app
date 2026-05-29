@@ -29,6 +29,19 @@ async function migrate() {
             ADD FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         `);
 
+        // refresh_tokens テーブルを追加
+        await db.execute(`
+            CREATE TABLE IF NOT EXISTS refresh_tokens (
+              id INT AUTO_INCREMENT PRIMARY KEY,
+              user_id INT NOT NULL,
+              token VARCHAR(255) NOT NULL UNIQUE,
+              expires_at DATETIME NOT NULL,
+              revoked TINYINT(1) NOT NULL DEFAULT 0,
+              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+              FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        `);
+
         console.log('Migration completed');
     } catch (error) {
         console.error('Migration failed:', error);

@@ -120,6 +120,42 @@ exports.insertUser = async (email, hashedPassword) => {
     }
 };
 
+exports.insertRefreshToken = async (userId, refreshToken, expiresAt) => {
+    try {
+        const [result] = await db.query(
+            'INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES (?, ?, ?)',
+            [userId, refreshToken, expiresAt]
+        );
+        return result;
+    } catch (err) {
+        throw err;
+    }
+};
+
+exports.findRefreshToken = async (refreshToken) => {
+    try {
+        const [rows] = await db.query(
+            'SELECT rt.id, rt.user_id, rt.token, rt.expires_at, rt.revoked, u.email FROM refresh_tokens rt INNER JOIN users u ON rt.user_id = u.id WHERE rt.token = ?',
+            [refreshToken]
+        );
+        return rows[0] || null;
+    } catch (err) {
+        throw err;
+    }
+};
+
+exports.revokeRefreshToken = async (refreshToken) => {
+    try {
+        const [result] = await db.query(
+            'UPDATE refresh_tokens SET revoked = 1 WHERE token = ?',
+            [refreshToken]
+        );
+        return result.affectedRows > 0;
+    } catch (err) {
+        throw err;
+    }
+};
+
 /*******************************************************************************
 *
 *   メソッド名         ：メールアドレス重複チェック（POST /auth/register）

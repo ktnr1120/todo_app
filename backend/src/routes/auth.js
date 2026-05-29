@@ -17,7 +17,7 @@ router.post('/register', authController.register);
 router.post('/login', authController.login);
 
 // ログアウト
-router.get('/logout', authController.logout);
+router.post('/logout', authController.logout);
 
 // リフレッシュトークン取得
 router.post('/refresh', authController.refresh);
